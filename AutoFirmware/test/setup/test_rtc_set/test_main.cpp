@@ -5,7 +5,9 @@
    It leaves a "stamp" (the build time) in the clock's battery RAM.
    After a reset it sees its own stamp and does not set again.
    After the tests, loop() prints the time every second.
-   Compare it with your phone. */
+   Compare it with your phone.
+   Run: pio test -e nanosetup -f setup/test_rtc_set
+ */
 
 #include <Arduino.h>
 #include <unity.h>

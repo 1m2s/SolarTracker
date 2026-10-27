@@ -1,10 +1,10 @@
 % generate_reference.m
 % Prints the expected values for test/test_sonnenstand/test_main.cpp.
 % Uses the ORIGINAL MATLAB files in CurrentFirmware/Matlab (not edited).
-% Run it in MATLAB: cd into AutoFirmware/test, then type generate_reference
+% Run it in MATLAB: cd into AutoFirmware/test/logic/test_sonnenstand, then type generate_reference
 
 here = fileparts(mfilename('fullpath'));
-addpath(fullfile(here, '..', '..', 'CurrentFirmware', 'Matlab'));
+addpath(fullfile(here, '..', '..', '..', '..', 'CurrentFirmware', 'Matlab'));
 format long
 
 Breite = 47.81;

@@ -1,9 +1,9 @@
 /* Notes
    Hardware test for the DS1302 clock. It only READS. It never writes.
    Needs: clock wired to D5 (CLK), D6 (DAT), D7 (RST), USB to left Nano.
-   Run: pio test -e nanotest -f test_rtc
+   Run: pio test -e nanotest -f hardware/test_rtc
    After the tests, loop() prints the time every second.
-   test/check_rtc.py reads these lines and compares them with the Mac.
+   test/hardware/test_rtc/check_rtc.py reads these lines and compares them with the Mac.
    Not for the PC. It is in test_ignore of [env:native]. */
 
 #include <Arduino.h>

@@ -3,8 +3,8 @@ Notes
 Compares the DS1302 clock with the Mac clock, live.
 The Mac clock is synced from the internet, so it is the reference.
 We compare in MEZ = UTC+1 all year, because the RTC is always MEZ.
-Before: pio test -e nanotest -f test_rtc
-Run:    ~/.platformio/penv/bin/python test/check_rtc.py
+Before: pio test -e nanotest -f hardware/test_rtc
+Run:    ~/.platformio/penv/bin/python test/hardware/test_rtc/check_rtc.py
 """
 import re
 import sys
