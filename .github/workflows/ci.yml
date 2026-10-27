@@ -1,0 +1,39 @@
+name: CI
+ 
+on:
+  push:
+  pull_request:
+ 
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: AutoFirmware
+ 
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+ 
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+ 
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+ 
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+ 
+      - name: Build firmware for the Nano
+        run: pio run -e nanoatmega328
+ 
+      - name: Run unit tests on the PC
+        run: pio test -e native
+ 
