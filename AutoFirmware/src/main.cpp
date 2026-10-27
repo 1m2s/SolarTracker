@@ -6,6 +6,7 @@
 #include "MOZ.h"
 #include "StundenWinkel.h"
 #include "Zeitgleichung.h"
+#include "Deklination.h"
 
 void setup() {
     Serial.begin(115200);
@@ -49,6 +50,13 @@ void setup() {
     Serial.println(Zeitgleichung(0.0f), 4);                    // ~ -2.7749   1 Jan
     Serial.println(Zeitgleichung(360.0f), 4);                  // ~ -2.7749   same as 0 (one full year)
     Serial.println(Zeitgleichung(300.0f / 365.0f * 360.0f), 4); // ~ 16.2271  27 Oct (today)
+
+    // Deklination
+    Serial.println(Deklination(1), 4);     // 1 Jan
+    Serial.println(Deklination(80), 4);    // ~21 Mar, should be near 0
+    Serial.println(Deklination(172), 4);   // ~21 Jun, should be near +23.4
+    Serial.println(Deklination(355), 4);   // ~21 Dec, should be near -23.4
+    Serial.println(Deklination(300), 4);   // 27 Oct (today)
 }
 
 void loop() {}
