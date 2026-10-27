@@ -1,5 +1,5 @@
 % generate_reference.m
-% Prints the expected values for test/test_sonnenstand/test_main.cpp.
+% Prints the expected values for test/logic/test_sonnenstand/test_main.cpp.
 % Uses the ORIGINAL MATLAB files in CurrentFirmware/Matlab (not edited).
 % Run it in MATLAB: cd into AutoFirmware/test/logic/test_sonnenstand, then type generate_reference
 
