@@ -9,6 +9,7 @@
 #include "Deklination.h"
 #include "HoehenWinkel.h"
 #include "Azimut.h"
+#include "SonnenStand.h"
 
 void setup() {
     Serial.begin(115200);
@@ -67,7 +68,7 @@ void setup() {
     Serial.println(HoehenWinkel(StundenWinkel(MOZ(MEZ(12, 0, 0), 9.66f)
                    + Zeitgleichung(300.0f / 365.0f * 360.0f)),
                    47.81f, Deklination(300)), 4);              // today 12:00 MEZ, full chain
-                   
+
     // Azimut
     Serial.println(Azimut(300, 47.81f, 540.0f), 4);   // 27 Oct, 09:00 WOZ: south-east
     Serial.println(Azimut(300, 47.81f, 720.0f), 4);   // 27 Oct, exactly noon: 180 (guard test)
@@ -75,6 +76,21 @@ void setup() {
     Serial.println(Azimut(172, 47.81f, 720.0f), 4);   // June, noon: 180 (guard test)
     Serial.println(Azimut(300, 47.81f, MOZ(MEZ(12, 0, 0), 9.66f)
                    + Zeitgleichung(300.0f / 365.0f * 360.0f)), 4);  // today 12:00 MEZ, full chain
+
+    // SonnenStand
+    float a, g;
+
+    SonnenStand(47.81f, 9.66f, 26, 10, 12, 0, 0, a, g);   // 26 Oct 12:00, ref: 178.53 / 29.96
+    Serial.print(a, 4); Serial.print("  "); Serial.println(g, 4);
+
+    SonnenStand(47.81f, 9.66f, 26, 10, 15, 0, 0, a, g);   // 26 Oct 15:00, ref: 225.41 / 18.53
+    Serial.print(a, 4); Serial.print("  "); Serial.println(g, 4);
+
+    SonnenStand(47.81f, 9.66f, 27, 10, 12, 0, 0, a, g);   // today 12:00, should match your chain tests
+    Serial.print(a, 4); Serial.print("  "); Serial.println(g, 4);
+
+    SonnenStand(47.81f, 9.66f, 21, 6, 13, 0, 1, a, g);    // 21 Jun 13:00 summer time
+    Serial.print(a, 4); Serial.print("  "); Serial.println(g, 4);
 }
 
 void loop() {}
