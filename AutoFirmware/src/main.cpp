@@ -7,6 +7,7 @@
 #include "StundenWinkel.h"
 #include "Zeitgleichung.h"
 #include "Deklination.h"
+#include "HoehenWinkel.h"
 
 void setup() {
     Serial.begin(115200);
@@ -57,6 +58,14 @@ void setup() {
     Serial.println(Deklination(172), 4);   // ~21 Jun, should be near +23.4
     Serial.println(Deklination(355), 4);   // ~21 Dec, should be near -23.4
     Serial.println(Deklination(300), 4);   // 27 Oct (today)
+
+    // HoehenWinkel
+    Serial.println(HoehenWinkel(0.0f, 47.81f, 23.4437f), 4);   // noon, June: ~65.6
+    Serial.println(HoehenWinkel(0.0f, 47.81f, -23.4139f), 4);  // noon, December: ~18.8
+    Serial.println(HoehenWinkel(90.0f, 47.81f, 0.0f), 4);      // 6h before noon, equinox: ~0 (horizon)
+    Serial.println(HoehenWinkel(StundenWinkel(MOZ(MEZ(12, 0, 0), 9.66f)
+                   + Zeitgleichung(300.0f / 365.0f * 360.0f)),
+                   47.81f, Deklination(300)), 4);              // today 12:00 MEZ, full chain
 }
 
 void loop() {}
