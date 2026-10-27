@@ -8,6 +8,7 @@
 #include "Zeitgleichung.h"
 #include "Deklination.h"
 #include "HoehenWinkel.h"
+#include "Azimut.h"
 
 void setup() {
     Serial.begin(115200);
@@ -66,6 +67,14 @@ void setup() {
     Serial.println(HoehenWinkel(StundenWinkel(MOZ(MEZ(12, 0, 0), 9.66f)
                    + Zeitgleichung(300.0f / 365.0f * 360.0f)),
                    47.81f, Deklination(300)), 4);              // today 12:00 MEZ, full chain
+                   
+    // Azimut
+    Serial.println(Azimut(300, 47.81f, 540.0f), 4);   // 27 Oct, 09:00 WOZ: south-east
+    Serial.println(Azimut(300, 47.81f, 720.0f), 4);   // 27 Oct, exactly noon: 180 (guard test)
+    Serial.println(Azimut(300, 47.81f, 900.0f), 4);   // 27 Oct, 15:00 WOZ: south-west
+    Serial.println(Azimut(172, 47.81f, 720.0f), 4);   // June, noon: 180 (guard test)
+    Serial.println(Azimut(300, 47.81f, MOZ(MEZ(12, 0, 0), 9.66f)
+                   + Zeitgleichung(300.0f / 365.0f * 360.0f)), 4);  // today 12:00 MEZ, full chain
 }
 
 void loop() {}
