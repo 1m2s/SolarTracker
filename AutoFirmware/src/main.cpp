@@ -3,6 +3,7 @@
 #include "rad2grad.h"
 #include "JahresTag.h"
 #include "MEZ.h"
+#include "MOZ.h"
 
 void setup() {
     Serial.begin(115200);
@@ -24,10 +25,16 @@ void setup() {
     Serial.println(JahresTag(12, 31));             // 365
 
     // MEZ
-    Serial.println(MEZ(12, 0, 0));                 // 720   winter, noon
-    Serial.println(MEZ(13, 0, 1));                 // 720   summer 13:00 = MEZ 12:00
+    Serial.println(MEZ(12, 0, 0));                 // 720
+    Serial.println(MEZ(13, 0, 1));                 // 720
     Serial.println(MEZ(15, 30, 0));                // 930
-    Serial.println(MEZ(0, 30, 1));                 // -30   MATLAB quirk, no day wrap
+    Serial.println(MEZ(0, 30, 1));                 // -30
+
+    // MOZ
+    Serial.println(MOZ(720, 15.0f), 4);            // 720.0000  (on the 15 deg line: no shift)
+    Serial.println(MOZ(720, 9.66f), 4);            // 698.6400
+    Serial.println(MOZ(930, 9.66f), 4);            // 908.6400
+    Serial.println(MOZ(MEZ(12, 0, 0), 9.66f), 4);  // 698.6400  (MEZ -> MOZ chained)
 }
 
 void loop() {}
