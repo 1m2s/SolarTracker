@@ -4,6 +4,7 @@
 #include "JahresTag.h"
 #include "MEZ.h"
 #include "MOZ.h"
+#include "StundenWinkel.h"
 
 void setup() {
     Serial.begin(115200);
@@ -35,6 +36,13 @@ void setup() {
     Serial.println(MOZ(720, 9.66f), 4);            // 698.6400
     Serial.println(MOZ(930, 9.66f), 4);            // 908.6400
     Serial.println(MOZ(MEZ(12, 0, 0), 9.66f), 4);  // 698.6400  (MEZ -> MOZ chained)
+
+        // StundenWinkel
+    Serial.println(StundenWinkel(720.0f), 4);      // 0.0000    noon
+    Serial.println(StundenWinkel(540.0f), 4);      // 45.0000   09:00
+    Serial.println(StundenWinkel(900.0f), 4);      // -45.0000  15:00
+    Serial.println(StundenWinkel(0.0f), 4);        // 180.0000  midnight
+    Serial.println(StundenWinkel(698.64f), 4);     // 5.3400    our MOZ at 12:00 MEZ
 }
 
 void loop() {}
