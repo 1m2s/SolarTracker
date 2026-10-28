@@ -6,9 +6,9 @@ All commands run inside `AutoFirmware/`.
 
 | Folder | What it checks | Needs | Runs in CI |
 |---|---|---|---|
-| `logic/` | Sun-position math vs. MATLAB reference values | Nothing | ✅ |
+| `logic/` | Sun-position math and byte conversion vs. MATLAB | Nothing | ✅ |
 | `hardware/` | Real tracker, **read-only** | Tracker on, USB to left Nano | ❌ |
-| `setup/` | One-time tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
+| `setup/` | Tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
 
 ## Commands
 
@@ -22,4 +22,5 @@ All commands run inside `AutoFirmware/`.
 | Live clock vs. Mac (after `test_rtc`) | `~/.platformio/penv/bin/python test/hardware/test_rtc/check_rtc.py` |
 | Watch the clock (Mac time on the left) | `pio device monitor -b 115200 --filter time` |
 | ⚠️ Set the clock (winter time only!) | `pio test -e nanosetup -f setup/test_rtc_set` |
+| ⚠️ I2C link check (sends start values, nothing moves; mode "ohne IMU", fresh power-on) | `pio test -e nanosetup -f setup/test_i2c_link` |
 | Make MATLAB reference values | MATLAB: `cd test/logic/test_sonnenstand`, then `generate_reference` |
