@@ -1,10 +1,11 @@
 /* Notes
    AUTO mode: the Nano computes the sun position itself.
    This is AusgabeSonnenstand.m in C++.
-   Every 30 s: read clock -> SonnenStand -> /2 and uint8 -> print.
-   SEND_I2C = false: nothing goes to the motors yet. Only Serial.
+   Every 30 s: read clock -> SonnenStand -> /2 and uint8 -> send + print.
+   SEND_I2C = true: values go to the right Nano, the motors move.
    The clock is always MEZ (winter time), so tf = 0.
    Bad clock time -> nothing is computed, nothing is sent.
+   ack = answer of the right Nano: 0 = OK, 2 = no answer.
 */
 
 #include <Arduino.h>
@@ -15,7 +16,7 @@
 #include "toUint8.h"
 
 // ---------- settings ----------
-const bool     SEND_I2C    = false;   // true = send to the motors (step 2.5)
+const bool     SEND_I2C    = true;    // NEW: false = Serial only, true = motors move
 const uint8_t  SLAVE_ADDR  = 0x19;    // right Nano (A_AIDE)
 const uint32_t INTERVAL_MS = 30000;   // MATLAB: pause(30)
 
@@ -32,12 +33,13 @@ ThreeWire rtcWire(PIN_DAT, PIN_CLK, PIN_RST);   // order: IO, SCLK, CE
 RtcDS1302<ThreeWire> Rtc(rtcWire);
 
 // MATLAB: writeRegister(slave, reg, value, 'uint8')
-void writeRegister(uint8_t reg, uint8_t value)
+// Gives back the answer code: 0 = OK (ACK), 2 = no answer   // NEW
+uint8_t writeRegister(uint8_t reg, uint8_t value)            // NEW: uint8_t, not void
 {
     Wire.beginTransmission(SLAVE_ADDR);
     Wire.write(reg);
     Wire.write(value);
-    Wire.endTransmission();
+    return Wire.endTransmission();                           // NEW: return the code
 }
 
 void setup()
@@ -75,12 +77,17 @@ void loop()
     Serial.print(F("  a="));  Serial.print(a, 4);
     Serial.print(F("  g="));  Serial.print(g, 4);
     Serial.print(F("  a8=")); Serial.print(a8);
-    Serial.print(F("  g8=")); Serial.println(g8);
+    Serial.print(F("  g8=")); Serial.print(g8);              // NEW: print, not println
 
     if (SEND_I2C) {
-        writeRegister(254, a8);
-        writeRegister(255, g8);
+        uint8_t ackA = writeRegister(254, a8);               // NEW: keep the answer
+        uint8_t ackG = writeRegister(255, g8);               // NEW
+        Serial.print(F("  ack="));                           // NEW
+        Serial.print(ackA);                                  // NEW
+        Serial.print('/');                                   // NEW
+        Serial.print(ackG);                                  // NEW
     }
+    Serial.println();                                        // NEW: end the line
 
     delay(INTERVAL_MS);
 }
