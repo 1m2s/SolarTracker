@@ -1,3 +1,9 @@
+/* Notes
+   Hardware test: asks the I2C bus who is there. It only READS.
+   Expects 0x19 (right Nano), 0x68 (MPU-9250), 0x77 (BMP280).
+   Needs: Power AN, IMU switch AN, USB to left Nano.
+   Run: pio test -e nanotest -f hardware/test_i2c_scan */
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <unity.h>
