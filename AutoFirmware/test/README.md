@@ -6,7 +6,7 @@ All commands run inside `AutoFirmware/`.
 
 | Folder | What it checks | Needs | Runs in CI |
 |---|---|---|---|
-| `logic/` | Sun-position math and byte conversion vs. MATLAB, LED pattern (`test_ledPattern`), 30 s timer across the millis() wrap (`test_isDue`) | Nothing | ✅ |
+| `logic/` | Sun-position math and byte conversion vs. MATLAB, LED pattern (`test_ledPattern`), 30 s timer across the millis() wrap (`test_isDue`), MATLAB line parser (`test_parseAngles`) | Nothing | ✅ |
 | `hardware/` | Real tracker, **read-only** | Tracker on, USB to left Nano | ❌ |
 | `setup/` | Tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
 
