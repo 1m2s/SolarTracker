@@ -7,10 +7,10 @@ All commands run inside `AutoFirmware/`.
 | Folder | What it checks | Needs | Runs in CI |
 |---|---|---|---|
 | `logic/` | Sun-position math and byte conversion vs. MATLAB, LED pattern (`test_ledPattern`), 30 s timer across the millis() wrap (`test_isDue`), MATLAB line parser (`test_parseAngles`), collecting USB characters into lines (`test_lineReader`) | Nothing | ✅ |
-| `hardware/` | Real tracker, **read-only** | Tracker on, IMU switch AUS, USB to left Nano | ❌ |
-| `setup/` | Tools that **write** to hardware | Tracker on, IMU switch AUS, USB to left Nano | ❌ |
+| `hardware/` | Real tracker, **read-only** | Tracker on, USB to left Nano | ❌ |
+| `setup/` | Tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
 
-⚠️ With the thesis firmware on the right Nano, **IMU switch AN breaks the I2C bus**: no device answers (see `test_i2c_fullscan`, result 2 Nov 2026). Keep the switch on AUS for all hardware tests.
+⚠️ With the old thesis firmware on the right Nano, **IMU switch AN breaks the I2C bus**: no device answers (see `test_i2c_fullscan`, result 2 Nov 2026). With `MotorFirmware` on the right Nano this no longer happens, because the right Nano never starts IMU mode. The switch is only read and passed on (`test_imu_switch`).
 
 ## Commands
 
@@ -21,6 +21,7 @@ All commands run inside `AutoFirmware/`.
 | All hardware checks | `pio test -e nanotest -f "hardware/*"` |
 | Only the I2C scan | `pio test -e nanotest -f hardware/test_i2c_scan` |
 | Full scan, 5 knocks per address (results only with `-v`) | `pio test -e nanotest -f hardware/test_i2c_fullscan -v` |
+| IMU switch via the right Nano (results only with `-v`) | `pio test -e nanotest -f hardware/test_imu_switch -v` |
 | Only the clock | `pio test -e nanotest -f hardware/test_rtc` |
 | Live clock vs. Mac (after `test_rtc`) | `~/.platformio/penv/bin/python test/hardware/test_rtc/check_rtc.py` |
 | Watch the clock (Mac time on the left) | `pio device monitor -b 115200 --filter time` |

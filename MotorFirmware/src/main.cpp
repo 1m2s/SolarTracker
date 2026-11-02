@@ -3,9 +3,10 @@
    I2C slave 0x19. The left Nano (or MATLAB) sends two messages:
      [254, a8]   azimuth  = a8 * 2 deg
      [255, g8]   elevation = g8 deg
+   When the left Nano asks, it answers 1 byte: the IMU switch
+   (1 = AN, 0 = AUS). It only reports the switch, it does not act on it.
    Behaves like mode "ohne IMU" of Photovoltaiknachfuehrung.ino:
    at power-on the panel must face south and stand vertical.
-   No IMU and no IMU switch here: the left Nano decides everything.
 */
 
 #include <Arduino.h>
@@ -18,10 +19,11 @@
 #include "Display.h"
 
 // ---------- settings (same values as the thesis) ----------
-const uint8_t SLAVE_ADDR = 0x19;    // 25, the address MATLAB and the left Nano use
-const float   SNull      = 95;      // servo angle for 0 deg elevation
-const float   SKorr      = 1.2f;    // correction factor for the servo
-const float   STEP_DEG   = 1.8f;    // 200 steps per turn
+const uint8_t SLAVE_ADDR     = 0x19;    // 25, the address MATLAB and the left Nano use
+const float   SNull          = 95;      // servo angle for 0 deg elevation
+const float   SKorr          = 1.2f;    // correction factor for the servo
+const float   STEP_DEG       = 1.8f;    // 200 steps per turn
+const uint8_t PIN_IMU_SWITCH = 7;       // S_PROGRAMM: GND = AN, 5 V = AUS
 
 // ---------- hardware ----------
 Stepper    stepper_1(200, 5, 4, 3, 2);    // L298N on D5, D4, D3, D2
@@ -55,11 +57,21 @@ void onMessage(int howMany)
     }
 }
 
+// Runs inside the I2C interrupt when the left Nano asks.
+// Answers 1 byte: 1 = IMU switch AN (D7 at GND), 0 = AUS (D7 at 5 V).
+void onAsk()
+{
+    uint8_t imuOn = (digitalRead(PIN_IMU_SWITCH) == LOW) ? 1 : 0;
+    Wire.write(imuOn);
+}
+
 void setup()
 {
     Wire.begin(SLAVE_ADDR);            // join the bus as slave 0x19
     Wire.setClock(100000);             // 100 kHz, same as before
     Wire.onReceive(onMessage);
+    Wire.onRequest(onAsk);
+    pinMode(PIN_IMU_SWITCH, INPUT);    // switch drives the pin hard, no pull-up needed
     Serial.begin(115200);
 
     stepper_1.setSpeed(6);             // 6 turns per minute
@@ -98,7 +110,8 @@ void loop()
 
 /* Notes
 1) What changed compared to Photovoltaiknachfuehrung.ino:
-   - No IMU, no BMP280, no IMU switch (D7 is not read any more).
+   - No IMU, no BMP280. The IMU switch (D7) no longer picks a mode;
+     it is only read to answer the left Nano (note 5).
    - Messages are read ONLY in onMessage (the interrupt), not also
      in loop(). Before, both read the same buffer.
    - onMessage has the right form void(int) and checks the length.
@@ -116,4 +129,12 @@ void loop()
 4) The (int) before SNull + off2 * SKorr: Servo.write() takes whole
    degrees. The old code cut off the decimals too, just without
    showing it.
+
+5) onAsk: the switch is wired only to this Nano (D7 on the PCB),
+   so this Nano passes it on. The left Nano asks with
+   Wire.requestFrom(0x19, 1) and decides what to do with it.
+   D7 is read at the moment of the question, so the answer is
+   always the current switch position.
+   Schaltplan: the switch connects D7 to either 5 V or GND,
+   so D7 is never floating and needs no pull-up.
 */
