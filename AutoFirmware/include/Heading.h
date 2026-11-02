@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 // Raw compass values (AK8963) -> calibrated magnetic field.
-// Uses the offsets measured in CurrentFirmware (Weingarten, 2020).
+// Uses the calibration from fit_compass.py (centre + oval).
 void magCalibrated(int16_t mx, int16_t my, int16_t mz, float &Mx, float &My, float &Mz);
 
 // Tilt-compensated heading of the IMU in degrees, 0 <= h < 360.

@@ -29,4 +29,6 @@ All commands run inside `AutoFirmware/`.
 | ⚠️ Set the clock (winter time only!) | `pio test -e nanosetup -f setup/test_rtc_set` |
 | ⚠️ I2C link check (sends start values, nothing moves; mode "ohne IMU", fresh power-on) | `pio test -e nanosetup -f setup/test_i2c_link` |
 | ⚠️ Compass live for 20 s (writes temporary IMU settings, nothing moves; turn the platform by hand) | `pio test -e nanosetup -f setup/test_compass -v` |
+| ⚠️ Compass calibration run: exact 180° turn, table edge to table edge (do it 3 times: run1, run2, run3) | `pio test -e nanosetup -f setup/test_compass_cal -v \| tee test/setup/test_compass_cal/run1.txt` |
+| Compute the calibration from the 3 runs (prints the numbers for `Heading.cpp`) | `~/.platformio/penv/bin/python test/setup/test_compass_cal/fit_compass.py test/setup/test_compass_cal/run1.txt test/setup/test_compass_cal/run2.txt test/setup/test_compass_cal/run3.txt` |
 | Make MATLAB reference values | MATLAB: `cd test/logic/test_sonnenstand`, then `generate_reference` |
