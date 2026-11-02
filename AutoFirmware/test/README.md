@@ -22,9 +22,11 @@ All commands run inside `AutoFirmware/`.
 | Only the I2C scan | `pio test -e nanotest -f hardware/test_i2c_scan` |
 | Full scan, 5 knocks per address (results only with `-v`) | `pio test -e nanotest -f hardware/test_i2c_fullscan -v` |
 | IMU switch via the right Nano (results only with `-v`) | `pio test -e nanotest -f hardware/test_imu_switch -v` |
+| IMU alive? (`WHO_AM_I`, results only with `-v`) | `pio test -e nanotest -f hardware/test_imu_id -v` |
 | Only the clock | `pio test -e nanotest -f hardware/test_rtc` |
 | Live clock vs. Mac (after `test_rtc`) | `~/.platformio/penv/bin/python test/hardware/test_rtc/check_rtc.py` |
 | Watch the clock (Mac time on the left) | `pio device monitor -b 115200 --filter time` |
 | ⚠️ Set the clock (winter time only!) | `pio test -e nanosetup -f setup/test_rtc_set` |
 | ⚠️ I2C link check (sends start values, nothing moves; mode "ohne IMU", fresh power-on) | `pio test -e nanosetup -f setup/test_i2c_link` |
+| ⚠️ Compass live for 20 s (writes temporary IMU settings, nothing moves; turn the platform by hand) | `pio test -e nanosetup -f setup/test_compass -v` |
 | Make MATLAB reference values | MATLAB: `cd test/logic/test_sonnenstand`, then `generate_reference` |
