@@ -83,7 +83,7 @@ void setup()
 void loop() {}
 
 
-/* Result, 2 Nov 2026 (thesis firmware on the right Nano)
+/* Result, 2 Nov 2026 (CurrentFirmware on the right Nano)
    IMU switch AUS: 0x19, 0x68, 0x77 answered 5/5, no bus problems.
    IMU switch AN:  nothing answered, 48 bus problems (two runs).
    -> In "mit IMU" mode the right Nano also uses the bus as master,

@@ -3,7 +3,7 @@
 #include <math.h>
 #include "Motion.h"
 
-// Same rules as setStepper_2() / setServo_2() in the thesis code.
+// Same rules as setStepper_2() / setServo_2() in CurrentFirmware.
 // Start: panel south (180 deg), vertical (0 deg).
 
 const float STEP_DEG = 1.8f;

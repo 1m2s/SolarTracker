@@ -10,7 +10,7 @@ All commands run inside `AutoFirmware/`.
 | `hardware/` | Real tracker, **read-only** | Tracker on, USB to left Nano | ❌ |
 | `setup/` | Tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
 
-⚠️ With the old thesis firmware on the right Nano, **IMU switch AN breaks the I2C bus**: no device answers (see `test_i2c_fullscan`, result 2 Nov 2026). With `MotorFirmware` on the right Nano this no longer happens, because the right Nano never starts IMU mode. The switch is only read and passed on (`test_imu_switch`).
+⚠️ With CurrentFirmware on the right Nano, **IMU switch AN breaks the I2C bus**: no device answers (see `test_i2c_fullscan`, result 2 Nov 2026). With `MotorFirmware` on the right Nano this no longer happens, because the right Nano never starts IMU mode. The switch is only read and passed on (`test_imu_switch`).
 
 ## Commands
 

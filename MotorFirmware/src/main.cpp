@@ -18,7 +18,7 @@
 #include "Measure.h"
 #include "Display.h"
 
-// ---------- settings (same values as the thesis) ----------
+// ---------- settings (same values as CurrentFirmware) ----------
 const uint8_t SLAVE_ADDR     = 0x19;    // 25, the address MATLAB and the left Nano use
 const float   SNull          = 95;      // servo angle for 0 deg elevation
 const float   SKorr          = 1.2f;    // correction factor for the servo
