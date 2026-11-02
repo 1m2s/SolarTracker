@@ -36,4 +36,11 @@ jobs:
  
       - name: Run unit tests on the PC
         run: pio test -e native
- 
+
+      - name: Build motor firmware for the right Nano
+        working-directory: MotorFirmware
+        run: pio run -e nanoatmega328
+
+      - name: Run motor unit tests on the PC
+        working-directory: MotorFirmware
+        run: pio test -e native
