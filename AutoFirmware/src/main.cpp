@@ -1,72 +1,158 @@
-/* Notes
-   One firmware, two modes. The switch on D2 picks the mode.
-   AUTO   (switch open):   the Nano computes the sun position itself.
-                           This is AusgabeSonnenstand.m in C++.
-                           Lines from USB are ignored.
-   MATLAB (switch to GND): MATLAB sends "alpha gamma" lines over USB,
-                           e.g. "245.41 3.86". The Nano parks at night
-                           with targetBytes, same as in AUTO.
-   No delay(): loop() runs many times per second.
-   Each pass: read the switch, read USB, update the LED.
-   AUTO: one cycle every 30 s (and right after switching to AUTO).
-   MATLAB: no good line for 180 s -> timeout, the panel stays.
-   LED on D13: fast blink = error, on = MATLAB, slow blink = AUTO OK.
-   The clock is always MEZ (winter time), so tf = 0.
-   ack = answer of the right Nano: 0 = OK, 2 = no answer, 5 = bus timeout.
-*/
-
+/**
+ * @file main.cpp
+ * @brief AutoFirmware for the left Nano: sun position (AUTO) or MATLAB angles
+ *
+ * The switch on PIN_MODE picks the mode. In AUTO the Nano reads the RTC every
+ * AUTO_INTERVAL_MS and computes the sun position (AusgabeSonnenstand.m in C++).
+ * In MATLAB mode it takes "alpha gamma" lines from USB. Both modes send the
+ * two target bytes to the right Nano over I2C. loop() never blocks.
+ *
+ * Target: Arduino Nano (ATmega328P), Arduino framework (PlatformIO atmelavr). Level: L2.
+ *
+ * @author Mohamed Sellami
+ * @date 2026-11-03
+ *
+ */
 #include <Arduino.h>
 #include <Wire.h>
 #include <ThreeWire.h>
 #include <RtcDS1302.h>
+#include "config/Board.h"
+#include "config/Settings.h"
 #include "SonnenStand.h"
 #include "targetBytes.h"
-#include "Mode.h"
 #include "LedPattern.h"
 #include "isDue.h"
 #include "LineReader.h"
 #include "parseAngles.h"
 #include "ClockWatch.h"
 
-// ---------- settings ----------
-const bool     SEND_I2C          = true;      // false = Serial only, true = motors move
-const uint8_t  SLAVE_ADDR        = 0x19;      // right Nano (A_AIDE)
-const uint32_t INTERVAL_MS       = 30000UL;   // MATLAB: pause(30)
-const uint32_t DEBOUNCE_MS       = 50;        // switch must be still this long
-const uint32_t MATLAB_TIMEOUT_MS = 180000UL;  // 6 missed MATLAB lines (6 x 30 s)
-const uint32_t WIRE_TIMEOUT_US   = 25000UL;   // I2C gives up after 25 ms
+/******************************************************************************
+ Constants
+******************************************************************************/
+/* "YYYY-MM-DD hh:mm:ss" is 19 characters plus the end marker. */
+static const uint8_t TIME_TEXT_LEN = 20u;
 
-// Standort (same as MATLAB)
-const float Breite = 47.81f;
-const float Laenge = 9.66f;
+/******************************************************************************
+ Private Data
+******************************************************************************/
+/* RTC driver. The constructors only store the pins; Rtc.Begin() in setup() sets them up. */
+static ThreeWire rtcWire(PIN_RTC_DAT, PIN_RTC_CLK, PIN_RTC_RST);
+static RtcDS1302<ThreeWire> Rtc(rtcWire);
 
-// ---------- pins ----------
-const uint8_t PIN_MODE = 2;     // switch: open = AUTO, GND = MATLAB
-const uint8_t PIN_LED  = 13;    // external LED + built-in LED
+/*
+ * State kept between loop() passes. Written and read only by loop() and the
+ * functions it calls; no ISR uses it, so no protection is needed.
+ */
 
-// ---------- clock ----------
-const uint8_t PIN_CLK = 5;
-const uint8_t PIN_DAT = 6;
-const uint8_t PIN_RST = 7;
+/* Mode the firmware acts on (after debounce). */
+static Mode mode = MODE_AUTO;
+/* true = the last cycle failed, the LED blinks fast. */
+static bool error = false;
+/* true = run an AUTO cycle now instead of waiting AUTO_INTERVAL_MS. */
+static bool runNow = true;
+/* millis() of the last AUTO cycle. */
+static uint32_t lastCycle = 0uL;
+/* Last raw reading of PIN_MODE. */
+static bool lastRaw = HIGH;
+/* millis() when that raw reading last changed. */
+static uint32_t rawSince = 0uL;
+/* Collects USB characters into one line. */
+static LineReader reader;
+/* millis() of the last good MATLAB line. */
+static uint32_t lastMatlab = 0uL;
+/* true = the MATLAB timeout was already reported. */
+static bool timedOut = false;
+/* Last RTC reading, to see if the clock still moves. */
+static ClockWatch clockWatch = {false, 0uL, 0uL};
 
-ThreeWire rtcWire(PIN_DAT, PIN_CLK, PIN_RST);   // order: IO, SCLK, CE
-RtcDS1302<ThreeWire> Rtc(rtcWire);
+/******************************************************************************
+ Private Function Declarations
+******************************************************************************/
+/**
+ * @brief Write one byte into a register of the right Nano
+ *
+ * Same as writeRegister(slave, reg, value, 'uint8') in MATLAB.
+ *
+ * @param[in] reg    Register, REG_ALPHA or REG_GAMMA.
+ * @param[in] value  Byte to write, 0..255.
+ *
+ * @return Code of Wire.endTransmission(): 0 = OK (ACK), 1 = data too long,
+ *         2 = no answer (address NACK), 3 = data NACK, 4 = other error,
+ *         5 = timeout (stuck bus, TWI was reset).
+ *
+ * @note Blocks at most WIRE_TIMEOUT_US.
+ */
+static uint8_t writeRegister(uint8_t reg, uint8_t value);
 
-// ---------- state (kept between loop passes) ----------
-Mode       mode       = MODE_AUTO;   // mode we act on
-bool       error      = false;       // something is wrong -> fast blink
-bool       runNow     = true;        // true = do an AUTO cycle now, don't wait
-uint32_t   lastCycle  = 0;           // millis() of the last AUTO cycle
-bool       lastRaw    = HIGH;        // last raw reading of the switch pin
-uint32_t   rawSince   = 0;           // millis() when that reading last changed
-LineReader reader;                   // collects USB characters into a line
-uint32_t   lastMatlab = 0;           // millis() of the last good MATLAB line
-bool       timedOut   = false;       // MATLAB timeout already reported
-ClockWatch clockWatch = {false, 0, 0};   // last RTC time, to spot a frozen clock
+/**
+ * @brief Send a target to the right Nano and print it
+ *
+ * Turns the angles into the two bytes (or the park bytes at night), prints
+ * "  a=..  g=..  a8=..  g8=..  [PARK]  ack=../.." and ends the line.
+ *
+ * @param[in] a  Azimuth alpha, deg.
+ * @param[in] g  Elevation gamma, deg.
+ *
+ * @return true if the right Nano answered OK to both bytes, or SEND_I2C is
+ *         false. false if one of the two transfers failed.
+ */
+static bool sendTarget(float a, float g);
 
-// MATLAB: writeRegister(slave, reg, value, 'uint8')
-// Gives back the answer code: 0 = OK (ACK), 2 = no answer, 5 = bus timeout
-uint8_t writeRegister(uint8_t reg, uint8_t value)
+/**
+ * @brief Print the current mode on Serial
+ */
+static void printMode(void);
+
+/**
+ * @brief Throw away all USB input that was not used yet
+ *
+ * Empties the receive buffer of the Nano and the half line in the LineReader.
+ */
+static void flushInput(void);
+
+/**
+ * @brief Read the switch and accept a new mode after debounce
+ *
+ * A new switch position counts only after it stayed unchanged for DEBOUNCE_MS.
+ *
+ * @param[in] now  millis() of this loop pass.
+ *
+ * @return true if the mode changed in this call, false otherwise.
+ */
+static bool updateMode(uint32_t now);
+
+/**
+ * @brief Run one AUTO cycle: read the RTC, compute the sun position, send it
+ *
+ * Sets error to true if the RTC is stopped, not valid or frozen (nothing is
+ * sent then), or if the right Nano does not answer.
+ *
+ * @param[in] now  millis() of this loop pass.
+ */
+static void autoCycle(uint32_t now);
+
+/**
+ * @brief Handle one full line from USB (in reader.buf)
+ *
+ * In AUTO the line is ignored. In MATLAB mode a good line is sent and
+ * restarts the timeout; a broken line is ignored and the timeout keeps running.
+ *
+ * @param[in] now  millis() of this loop pass.
+ */
+static void handleLine(uint32_t now);
+
+/**
+ * @brief Read every character waiting on USB and handle full lines
+ *
+ * @param[in] now  millis() of this loop pass.
+ */
+static void readSerial(uint32_t now);
+
+/******************************************************************************
+ Function Definitions
+******************************************************************************/
+static uint8_t writeRegister(uint8_t reg, uint8_t value)
 {
     Wire.beginTransmission(SLAVE_ADDR);
     Wire.write(reg);
@@ -74,13 +160,11 @@ uint8_t writeRegister(uint8_t reg, uint8_t value)
     return Wire.endTransmission();
 }
 
-// Used by AUTO and MATLAB: angles -> bytes -> right Nano.
-// Prints "  a=..  g=..  a8=..  g8=..  [PARK]  ack=../.." and ends the line.
-// Gives back true if the right Nano answered OK (or SEND_I2C is off).
-bool sendTarget(float a, float g)
+static bool sendTarget(float a, float g)
 {
-    uint8_t a8, g8;
-    bool parked = targetBytes(a, g, a8, g8);   // day: sun bytes, night: park bytes
+    uint8_t a8 = 0u;
+    uint8_t g8 = 0u;
+    bool parked = targetBytes(a, g, a8, g8);
 
     Serial.print(F("  a="));  Serial.print(a, 4);
     Serial.print(F("  g="));  Serial.print(g, 4);
@@ -92,8 +176,8 @@ bool sendTarget(float a, float g)
 
     bool ackOk = true;
     if (SEND_I2C) {
-        uint8_t ackA = writeRegister(254, a8);
-        uint8_t ackG = writeRegister(255, g8);
+        uint8_t ackA = writeRegister(REG_ALPHA, a8);
+        uint8_t ackG = writeRegister(REG_GAMMA, g8);
         Serial.print(F("  ack="));
         Serial.print(ackA);
         Serial.print('/');
@@ -104,7 +188,7 @@ bool sendTarget(float a, float g)
     return ackOk;
 }
 
-void printMode()
+static void printMode(void)
 {
     if (mode == MODE_AUTO) {
         Serial.println(F("Mode -> AUTO"));
@@ -113,95 +197,96 @@ void printMode()
     }
 }
 
-// Throws away everything that came over USB but was not used yet.
-void flushInput()
+static void flushInput(void)
 {
     while (Serial.available() > 0) {
-        Serial.read();                   // USB buffer of the Nano
+        /* The byte is not needed; reading it is what removes it. */
+        (void)Serial.read();
     }
-    lineClear(reader);                   // half line in our LineReader
+    lineClear(reader);
 }
 
-// Reads the switch. Gives back true when the mode has changed.
-// A new position counts only after it was still for DEBOUNCE_MS.
-bool updateMode(uint32_t now)
+static bool updateMode(uint32_t now)
 {
-    bool raw = digitalRead(PIN_MODE);    // HIGH = open = AUTO
-    if (raw != lastRaw) {                // pin moved (or bounced)
+    bool raw = digitalRead(PIN_MODE);
+    if (raw != lastRaw) {
         lastRaw  = raw;
-        rawSince = now;                  // start the "still" timer again
+        rawSince = now;
         return false;
     }
     Mode m = raw ? MODE_AUTO : MODE_MATLAB;
     if (m != mode && isDue(now, rawSince, DEBOUNCE_MS)) {
-        mode = m;                        // still long enough -> accept
+        mode = m;
         return true;
     }
     return false;
 }
 
-// One AUTO cycle: read clock -> SonnenStand -> sendTarget.
-// Sets error = true if the clock is stopped, bad or frozen,
-// or if the right Nano does not answer.
-void autoCycle(uint32_t now)
+static void autoCycle(uint32_t now)
 {
-    // Halt bit set: the clock stands still, but GetDateTime still looks valid
+    /*
+     * GetDateTime() masks the clock-halt bit, so a stopped clock still gives
+     * a valid-looking time. Only GetIsRunning() shows it.
+     */
     if (!Rtc.GetIsRunning()) {
         Serial.println(F("AUTO    RTC stopped -> nothing sent"));
         error = true;
         return;
     }
 
-    RtcDateTime t = Rtc.GetDateTime();   // MATLAB: clock
+    RtcDateTime t = Rtc.GetDateTime();
 
-    // Clock check: same rule as test_rtc (valid date, year 2026 or later)
-    if (!t.IsValid() || t.Year() < 2026) {
+    if (!t.IsValid() || t.Year() < RTC_YEAR_MIN) {
         Serial.println(F("AUTO    RTC not valid -> nothing sent"));
         error = true;
         return;
     }
 
-    // Time valid, but it does not move (e.g. dead crystal)
+    /* A valid time that does not move means a dead crystal. */
     if (clockFrozen(clockWatch, now, t.TotalSeconds())) {
         Serial.println(F("AUTO    RTC frozen -> nothing sent"));
         error = true;
         return;
     }
 
-    float a, g;
-    SonnenStand(Breite, Laenge, t.Day(), t.Month(), t.Hour(), t.Minute(), 0, a, g);
+    float a = 0.0f;
+    float g = 0.0f;
+    SonnenStand(BREITE_DEG, LAENGE_DEG, t.Day(), t.Month(), t.Hour(), t.Minute(), CLOCK_TF, a, g);
 
-    char buf[20];
-    snprintf(buf, sizeof(buf), "%04u-%02u-%02u %02u:%02u:%02u",
-             t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second());
+    char buf[TIME_TEXT_LEN];
+    int n = snprintf(buf, sizeof(buf), "%04u-%02u-%02u %02u:%02u:%02u",
+                     t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second());
     Serial.print(F("AUTO    "));
-    Serial.print(buf);
+    if ((n > 0) && ((size_t)n < sizeof(buf))) {
+        Serial.print(buf);
+    } else {
+        Serial.print(F("(time?)"));
+    }
 
     error = !sendTarget(a, g);
 }
 
-// A full line came over USB (it is in reader.buf).
-void handleLine(uint32_t now)
+static void handleLine(uint32_t now)
 {
     if (mode == MODE_AUTO) {
         Serial.println(F("ignored: switch on AUTO"));
         return;
     }
 
-    float a, g;
+    float a = 0.0f;
+    float g = 0.0f;
     if (!parseAngles(reader.buf, a, g)) {
         Serial.println(F("MATLAB  bad line -> ignored"));
-        return;                          // panel stays, timeout keeps running
+        return;
     }
 
     Serial.print(F("MATLAB"));
-    error      = !sendTarget(a, g);      // good line: also clears a timeout error
-    lastMatlab = now;                    // timeout starts again
+    error      = !sendTarget(a, g);
+    lastMatlab = now;
     timedOut   = false;
 }
 
-// Reads all characters that are waiting on USB.
-void readSerial(uint32_t now)
+static void readSerial(uint32_t now)
 {
     while (Serial.available() > 0) {
         char c = (char)Serial.read();
@@ -216,21 +301,22 @@ void readSerial(uint32_t now)
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(SERIAL_BAUD);
     pinMode(PIN_LED, OUTPUT);
-    pinMode(PIN_MODE, INPUT_PULLUP);   // open switch reads HIGH
-    Rtc.Begin();                       // only sets pin modes, writes nothing
+    pinMode(PIN_MODE, INPUT_PULLUP);
+    Rtc.Begin();
     if (SEND_I2C) {
-        Wire.begin();                  // Nano is I2C master, 100 kHz like MATLAB
-        Wire.setWireTimeout(WIRE_TIMEOUT_US, true);   // stuck bus: give up, reset TWI
+        Wire.begin();
+        Wire.setWireTimeout(WIRE_TIMEOUT_US, true);
     }
     lineClear(reader);
 
-    delay(10);                         // let the pull-up charge the wire (setup only)
+    delay(PULLUP_SETTLE_MS);
     lastRaw    = digitalRead(PIN_MODE);
     rawSince   = millis();
-    lastMatlab = millis();             // MATLAB timeout starts at power-on
-    mode       = lastRaw ? MODE_AUTO : MODE_MATLAB;   // at start: take it directly
+    lastMatlab = millis();
+    /* At power-on there is no old mode to bounce from, so take it directly. */
+    mode       = lastRaw ? MODE_AUTO : MODE_MATLAB;
 
     Serial.print(F("Hybrid firmware, SEND_I2C = "));
     Serial.println(SEND_I2C ? F("ON") : F("OFF"));
@@ -241,36 +327,32 @@ void loop()
 {
     uint32_t now = millis();
 
-    // 1) Switch: did the mode change?
     if (updateMode(now)) {
-        error = false;                 // old error belonged to the other mode
-        flushInput();                  // old USB data belonged to the other mode
+        /* An old error and old USB data belong to the other mode. */
+        error = false;
+        flushInput();
         printMode();
         if (mode == MODE_AUTO) {
-            runNow = true;             // back in AUTO: compute right away
+            runNow = true;
         } else {
-            lastMatlab = now;          // MATLAB: timeout starts now
-            timedOut   = false;        // panel stays until a good line comes
+            lastMatlab = now;
+            timedOut   = false;
         }
     }
 
-    // 2) USB: handle every full line
     readSerial(now);
 
-    // 3) AUTO: cycle right now, or 30 s after the last one
-    if (mode == MODE_AUTO && (runNow || isDue(now, lastCycle, INTERVAL_MS))) {
+    if (mode == MODE_AUTO && (runNow || isDue(now, lastCycle, AUTO_INTERVAL_MS))) {
         runNow    = false;
         lastCycle = now;
         autoCycle(now);
     }
 
-    // 4) MATLAB: no good line for too long -> report once, fast blink
     if (mode == MODE_MATLAB && !timedOut && isDue(now, lastMatlab, MATLAB_TIMEOUT_MS)) {
         timedOut = true;
         error    = true;
         Serial.println(F("MATLAB  timeout -> panel stays"));
     }
 
-    // 5) LED: on or off right now?
     digitalWrite(PIN_LED, ledOn(mode, error, now) ? HIGH : LOW);
 }

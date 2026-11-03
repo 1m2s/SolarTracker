@@ -2,7 +2,7 @@
 #define LEDPATTERN_H
 
 #include <stdint.h>
-#include "Mode.h"
+#include "config/Settings.h"
 
 // Says if the LED should be on right now.
 // ms = time from millis(). error = the last cycle had a problem.
