@@ -34,8 +34,8 @@
  * @param[in]  month           Month, 1..12.
  * @param[in]  hour            Hour of the clock, 0..23.
  * @param[in]  minute          Minute of the clock, 0..59.
- * @param[in]  summerTimeFlag  0 = the clock shows CET (winter time),
- *                             1 = summer time.
+ * @param[in]  summerTime      false = the clock shows CET (winter time),
+ *                             true = the clock shows summer time (CEST).
  * @param[out] azimuthDeg      Azimuth, deg, 0..360 (180 = South), or NAN when
  *                             the sun is straight overhead. Always written.
  * @param[out] elevationDeg    Elevation, deg, -90..90, negative at night.
@@ -45,7 +45,7 @@
  *       MATLAB).
  */
 void sunPosition(float latitudeDeg, float longitudeDeg, int day, int month,
-                 int hour, int minute, int summerTimeFlag,
+                 int hour, int minute, bool summerTime,
                  float &azimuthDeg, float &elevationDeg);
 
 #endif /* SUNPOSITION_H */

@@ -14,11 +14,11 @@ const float LONGITUDE_DEG = 9.66f;
 void setUp(void) {}
 void tearDown(void) {}
 
-// Helper: real sun position for a time (summerTimeFlag = 0, CET), then the bytes
+// Helper: real sun position for a time (summer time off, CET), then the bytes
 bool bytesAt(int day, int month, int hour, int minute, uint8_t &azimuthByte, uint8_t &elevationByte)
 {
     float azimuthDeg, elevationDeg;
-    sunPosition(LATITUDE_DEG, LONGITUDE_DEG, day, month, hour, minute, 0, azimuthDeg, elevationDeg);
+    sunPosition(LATITUDE_DEG, LONGITUDE_DEG, day, month, hour, minute, false, azimuthDeg, elevationDeg);
     return targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte);
 }
 
@@ -115,7 +115,7 @@ void test_year_scan(void)
     for (int minute = 0; minute < 60; minute++) {
         float azimuthDeg, elevationDeg;
         uint8_t azimuthByte, elevationByte;
-        sunPosition(LATITUDE_DEG, LONGITUDE_DEG, day, month, hour, minute, 0, azimuthDeg, elevationDeg);
+        sunPosition(LATITUDE_DEG, LONGITUDE_DEG, day, month, hour, minute, false, azimuthDeg, elevationDeg);
         bool parked = targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte);
 
         int target = 2 * azimuthByte;            // what the right Nano turns to

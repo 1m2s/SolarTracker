@@ -77,7 +77,7 @@ static uint8_t writeRegister(uint8_t registerAddr, uint8_t value);
  * @brief Send a target to the right Nano and print it
  *
  * Turns the angles into the two bytes (or the park bytes at night), prints
- * "  a=..  g=..  a8=..  g8=..  [PARK]  ack=../.." and ends the line.
+ * "  az=..  el=..  azByte=..  elByte=..  [PARK]  ack=../.." and ends the line.
  *
  * @param[in] azimuthDeg    Azimuth, deg.
  * @param[in] elevationDeg  Elevation, deg.
@@ -143,10 +143,10 @@ static bool sendTarget(float azimuthDeg, float elevationDeg)
     uint8_t elevationByte = 0u;
     bool parked = targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte);
 
-    Serial.print(F("  a="));  Serial.print(azimuthDeg, 4);
-    Serial.print(F("  g="));  Serial.print(elevationDeg, 4);
-    Serial.print(F("  a8=")); Serial.print(azimuthByte);
-    Serial.print(F("  g8=")); Serial.print(elevationByte);
+    Serial.print(F("  az="));     Serial.print(azimuthDeg, 4);
+    Serial.print(F("  el="));     Serial.print(elevationDeg, 4);
+    Serial.print(F("  azByte=")); Serial.print(azimuthByte);
+    Serial.print(F("  elByte=")); Serial.print(elevationByte);
     if (parked) {
         Serial.print(F("  PARK"));
     }
@@ -159,7 +159,7 @@ static bool sendTarget(float azimuthDeg, float elevationDeg)
         Serial.print(ackAzimuth);
         Serial.print('/');
         Serial.print(ackElevation);
-        ackOk = (ackAzimuth == 0 && ackElevation == 0);
+        ackOk = (ackAzimuth == 0u) && (ackElevation == 0u);
     }
     Serial.println();
     return ackOk;
@@ -213,7 +213,7 @@ static void autoCycle(uint32_t now)
     float azimuthDeg   = 0.0f;
     float elevationDeg = 0.0f;
     sunPosition(LATITUDE_DEG, LONGITUDE_DEG, rtcTime.Day(), rtcTime.Month(),
-                rtcTime.Hour(), rtcTime.Minute(), SUMMER_TIME_FLAG, azimuthDeg, elevationDeg);
+                rtcTime.Hour(), rtcTime.Minute(), RTC_SUMMER_TIME, azimuthDeg, elevationDeg);
 
     char timeText[TIME_TEXT_LEN];
     int printedLength = snprintf(timeText, sizeof(timeText), "%04u-%02u-%02u %02u:%02u:%02u",

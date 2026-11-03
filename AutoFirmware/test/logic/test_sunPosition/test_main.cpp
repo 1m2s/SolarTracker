@@ -38,8 +38,8 @@ void test_dayOfYear(void)
  
 void test_cetMinutes(void)
 {
-    TEST_ASSERT_EQUAL_INT(720, cetMinutes(12, 0, 0));   // winter time
-    TEST_ASSERT_EQUAL_INT(720, cetMinutes(13, 0, 1));   // summer time: 13:00 = 12:00 CET
+    TEST_ASSERT_EQUAL_INT(720, cetMinutes(12, 0, false));   // winter time
+    TEST_ASSERT_EQUAL_INT(720, cetMinutes(13, 0, true));    // summer time: 13:00 = 12:00 CET
 }
  
 void test_meanLocalMinutes(void)
@@ -86,19 +86,19 @@ void test_azimuth_zenith_is_nan(void)
  
 // ---------- full chain ----------
  
-void check_sunPosition(int day, int month, int hour, int minute, int summerTimeFlag,
+void check_sunPosition(int day, int month, int hour, int minute, bool summerTime,
                        float expectedAzimuthDeg, float expectedElevationDeg)
 {
     float azimuthDeg, elevationDeg;
-    sunPosition(LATITUDE_DEG, LONGITUDE_DEG, day, month, hour, minute, summerTimeFlag, azimuthDeg, elevationDeg);
+    sunPosition(LATITUDE_DEG, LONGITUDE_DEG, day, month, hour, minute, summerTime, azimuthDeg, elevationDeg);
     TEST_ASSERT_FLOAT_WITHIN(TOL, expectedAzimuthDeg, azimuthDeg);
     TEST_ASSERT_FLOAT_WITHIN(TOL, expectedElevationDeg, elevationDeg);
 }
  
-void test_sunPosition_26Oct_1200(void) { check_sunPosition(26, 10, 12, 0, 0, 178.5269f, 29.9640f); }
-void test_sunPosition_26Oct_1500(void) { check_sunPosition(26, 10, 15, 0, 0, 225.4056f, 18.5318f); }
-void test_sunPosition_27Oct_1200(void) { check_sunPosition(27, 10, 12, 0, 0, 178.5591f, 29.6214f); }
-void test_sunPosition_21Jun_1300(void) { check_sunPosition(21,  6, 13, 0, 1, 167.3561f, 65.2079f); }
+void test_sunPosition_26Oct_1200(void) { check_sunPosition(26, 10, 12, 0, false, 178.5269f, 29.9640f); }
+void test_sunPosition_26Oct_1500(void) { check_sunPosition(26, 10, 15, 0, false, 225.4056f, 18.5318f); }
+void test_sunPosition_27Oct_1200(void) { check_sunPosition(27, 10, 12, 0, false, 178.5591f, 29.6214f); }
+void test_sunPosition_21Jun_1300(void) { check_sunPosition(21,  6, 13, 0, true,  167.3561f, 65.2079f); }
  
 int runAllTests(void)
 {

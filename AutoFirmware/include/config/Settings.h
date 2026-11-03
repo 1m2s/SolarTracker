@@ -1,6 +1,6 @@
 /**
  * @file Settings.h
- * @brief Behaviour settings of AutoFirmware: timings, location, limits, modes
+ * @brief Behaviour settings of AutoFirmware: timings, location, limits
  *
  * Values that decide how the firmware behaves, independent of the wiring.
  * Pins and bus addresses are in Board.h.
@@ -45,18 +45,9 @@ const float LONGITUDE_DEG = 9.66f;
 const uint16_t RTC_YEAR_MIN = 2026u;
 
 /*
- * Summer-time flag for sunPosition: 0 = CET (winter time), 1 = summer time.
- * The RTC is always set to CET, so this stays 0 all year.
+ * Does the RTC show summer time? false = CET (winter time), true = CEST.
+ * The RTC is always set to CET, so this stays false all year.
  */
-const int SUMMER_TIME_FLAG = 0;
-
-/******************************************************************************
- Types
-******************************************************************************/
-/** @brief Who decides where the panel points, picked by the switch on PIN_MODE */
-enum Mode : uint8_t {
-    MODE_AUTO   = 0,    /**< Switch open: the Nano computes the sun position */
-    MODE_MATLAB = 1     /**< Switch to GND: MATLAB sends the angles over USB */
-};
+const bool RTC_SUMMER_TIME = false;
 
 #endif /* SETTINGS_H */

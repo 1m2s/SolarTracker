@@ -21,10 +21,10 @@
 ******************************************************************************/
 /* From MATLAB: SonnenStand.m */
 void sunPosition(float latitudeDeg, float longitudeDeg, int day, int month,
-                 int hour, int minute, int summerTimeFlag,
+                 int hour, int minute, bool summerTime,
                  float &azimuthDeg, float &elevationDeg)
 {
-    int   cetMin            = cetMinutes(hour, minute, summerTimeFlag);
+    int   cetMin            = cetMinutes(hour, minute, summerTime);
     float meanLocalMin      = meanLocalMinutes((float)cetMin, longitudeDeg);
 
     int   dayNumber         = dayOfYear(month, day);

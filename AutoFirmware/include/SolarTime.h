@@ -41,17 +41,17 @@ int dayOfYear(int month, int day);
  *
  * From MATLAB: MEZ.m
  *
- * @param[in] hour            Hour of the clock, 0..23.
- * @param[in] minute          Minute of the clock, 0..59.
- * @param[in] summerTimeFlag  0 = the clock shows CET (winter time),
- *                            1 = summer time. Any other value acts like 0.
+ * @param[in] hour        Hour of the clock, 0..23.
+ * @param[in] minute      Minute of the clock, 0..59.
+ * @param[in] summerTime  false = the clock shows CET (winter time),
+ *                        true = the clock shows summer time (CEST).
  *
  * @return Minutes since 0:00 CET, -60..1439.
  *
  * @note In summer time before 1:00 the result is negative (00:30 gives -30,
  *       not 23:30 of the day before). Same as MATLAB.
  */
-int cetMinutes(int hour, int minute, int summerTimeFlag);
+int cetMinutes(int hour, int minute, bool summerTime);
 
 /**
  * @brief Mean local time from CET
