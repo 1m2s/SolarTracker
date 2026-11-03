@@ -6,7 +6,7 @@ All commands run inside `AutoFirmware/`.
 
 | Folder | What it checks | Needs | Runs in CI |
 |---|---|---|---|
-| `logic/` | Sun-position math and byte conversion vs. MATLAB, LED pattern (`test_ledPattern`), 30 s timer across the millis() wrap (`test_isDue`), MATLAB line parser (`test_parseAngles`), collecting USB characters into lines (`test_lineReader`), compass heading (`test_heading`) | Nothing | ✅ |
+| `logic/` | Sun-position math and byte conversion vs. MATLAB, LED pattern (`test_ledPattern`), switch debounce, AUTO timing, MATLAB timeout and LED (`test_controller`), 30 s timer across the millis() wrap (`test_isDue`), MATLAB line parser (`test_parseAngles`), collecting USB characters into lines (`test_lineReader`), compass heading (`test_heading`) | Nothing | ✅ |
 | `hardware/` | Real tracker, **read-only** | Tracker on, USB to left Nano | ❌ |
 | `setup/` | Tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
 
