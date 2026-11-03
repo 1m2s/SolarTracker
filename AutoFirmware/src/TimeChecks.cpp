@@ -19,16 +19,16 @@
  * and the RTC second are not in step, so two readings 1 s apart can still
  * show the same second.
  */
-static const uint32_t FROZEN_MS = 2000;
+static const uint32_t FROZEN_MS = 2000uL;
 
 /******************************************************************************
  Function Definitions
 ******************************************************************************/
-bool isDue(uint32_t now, uint32_t last, uint32_t interval)
+bool isDue(uint32_t nowMs, uint32_t lastMs, uint32_t intervalMs)
 {
     /* A6: wrap-safe */
-    uint32_t passed = now - last;
-    return passed >= interval;
+    uint32_t passedMs = nowMs - lastMs;
+    return passedMs >= intervalMs;
 }
 
 bool clockFrozen(ClockWatch &watch, uint32_t nowMs, uint32_t rtcSeconds)

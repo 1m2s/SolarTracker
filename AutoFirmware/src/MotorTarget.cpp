@@ -19,8 +19,8 @@
  Constants
 ******************************************************************************/
 /* Park position = start position of MotorFirmware: 90 * 2 = 180 deg (South), 0 deg (vertical). */
-static const uint8_t PARK_AZIMUTH_BYTE   = 90;
-static const uint8_t PARK_ELEVATION_BYTE = 0;
+static const uint8_t PARK_AZIMUTH_BYTE   = 90u;
+static const uint8_t PARK_ELEVATION_BYTE = 0u;
 
 /*
  * Safe azimuth window, deg. A year scan for Weingarten gives 53.7..306.3 deg
@@ -40,8 +40,12 @@ uint8_t toUint8(float value)
      * undefined behaviour. !(value > 0) is also true for NaN, where value <= 0
      * is not.
      */
-    if (!(value > 0.0f))   return 0;
-    if (value >= 255.0f)   return 255;
+    if (!(value > 0.0f)) {
+        return 0u;
+    }
+    if (value >= 255.0f) {
+        return 255u;
+    }
     return (uint8_t)roundf(value);
 }
 
