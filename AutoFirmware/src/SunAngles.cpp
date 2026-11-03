@@ -51,8 +51,8 @@ float elevation(float hourAngleDeg, float latitudeDeg, float declinationDeg)
      * The asinf argument is sin(elevation): at most sin(65.6 deg) = 0.91 in
      * Weingarten, so it stays inside -1..1 there and needs no clamp.
      */
-    float elevationDeg   = asinf(cosf(hourAngleRad) * cosf(latitudeRad) * cosf(declinationRad) + sinf(latitudeRad) * sinf(declinationRad));
-    elevationDeg = radToDeg(elevationDeg);
+    float elevationRad   = asinf(cosf(hourAngleRad) * cosf(latitudeRad) * cosf(declinationRad) + sinf(latitudeRad) * sinf(declinationRad));
+    float elevationDeg = radToDeg(elevationRad);
     return elevationDeg;
 }
 
@@ -83,12 +83,12 @@ float azimuth(int dayNumber, float latitudeDeg, float trueSolarMin)
     if (cosArgument > 1.0f)  cosArgument = 1.0f;
     if (cosArgument < -1.0f) cosArgument = -1.0f;
 
-    float azimuthDeg;
+    float azimuthRad;
     if (trueSolarMin < 12.0f * 60.0f) {
-        azimuthDeg = (float)M_PI - acosf(cosArgument);
+        azimuthRad = (float)M_PI - acosf(cosArgument);
     } else {
-        azimuthDeg = (float)M_PI + acosf(cosArgument);
+        azimuthRad = (float)M_PI + acosf(cosArgument);
     }
-    azimuthDeg = radToDeg(azimuthDeg);
+    float azimuthDeg = radToDeg(azimuthRad);
     return azimuthDeg;
 }

@@ -18,7 +18,7 @@
 /******************************************************************************
  Function Definitions
 ******************************************************************************/
-/* From MATLAB: JahresTag.m (MATLAB counts from 1, so MTage(1) is MTage[0]) */
+/* From MATLAB: JahresTag.m (MATLAB counts from 1, so MTage(1) is daysInMonth[0]) */
 int dayOfYear(int month, int day)
 {
     const int daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
