@@ -19,7 +19,7 @@
 #include <RtcDS1302.h>
 #include "config/Board.h"
 #include "config/Settings.h"
-#include "SonnenStand.h"
+#include "SunPosition.h"
 #include "targetBytes.h"
 #include "LedPattern.h"
 #include "isDue.h"

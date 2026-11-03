@@ -1,6 +1,6 @@
 #include <unity.h>
 #include <math.h>
-#include "SonnenStand.h"
+#include "SunPosition.h"
 #include "targetBytes.h"
 
 // Day: same bytes as MATLAB (a8 = uint8(alpha/2), g8 = uint8(gamma)).

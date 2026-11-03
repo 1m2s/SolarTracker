@@ -2,10 +2,8 @@
 #include <math.h>
 #include "AngleConversion.h"
 #include "SolarTime.h"
-#include "Deklination.h"
-#include "HoehenWinkel.h"
-#include "Azimut.h"
-#include "SonnenStand.h"
+#include "SunAngles.h"
+#include "SunPosition.h"
  
 // Expected values come from MATLAB (see generate_reference.m).
 // TOL = 0.001 degrees: far below the motor resolution (2 deg / 1 deg)
