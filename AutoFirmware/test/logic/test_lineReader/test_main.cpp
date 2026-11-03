@@ -2,10 +2,6 @@
 #include <string.h>
 #include "MatlabLink.h"
  
-// LineReader collects characters until '\n'.
-// '\r' is skipped, empty lines are ignored, too long lines are thrown away.
- 
-// Helper: feed a whole text, give back the status of the LAST character
 static LineStatus feedAll(LineReader &reader, const char *text)
 {
     LineStatus lineStatus = LINE_NONE;
@@ -16,7 +12,6 @@ static LineStatus feedAll(LineReader &reader, const char *text)
     return lineStatus;
 }
  
-// Helper: a text with count times 'x'
 static void makeX(char *out, uint8_t count)
 {
     memset(out, 'x', count);
@@ -30,8 +25,8 @@ void test_normal_line(void)
 {
     LineReader reader;
     lineClear(reader);
-    TEST_ASSERT_EQUAL(LINE_NONE, feedAll(reader, "245.41 3.86"));   // not finished yet
-    TEST_ASSERT_EQUAL(LINE_READY, lineFeed(reader, '\n'));          // now finished
+    TEST_ASSERT_EQUAL(LINE_NONE, feedAll(reader, "245.41 3.86"));
+    TEST_ASSERT_EQUAL(LINE_READY, lineFeed(reader, '\n'));
     TEST_ASSERT_EQUAL_STRING("245.41 3.86", reader.buf);
 }
  
@@ -40,7 +35,7 @@ void test_crlf(void)
     LineReader reader;
     lineClear(reader);
     TEST_ASSERT_EQUAL(LINE_READY, feedAll(reader, "245.41 3.86\r\n"));
-    TEST_ASSERT_EQUAL_STRING("245.41 3.86", reader.buf);            // no '\r' inside
+    TEST_ASSERT_EQUAL_STRING("245.41 3.86", reader.buf);
 }
  
 void test_two_lines(void)
@@ -58,7 +53,7 @@ void test_exactly_31_is_ok(void)
     LineReader reader;
     lineClear(reader);
     char text[LINE_LEN_MAX + 1];
-    makeX(text, LINE_LEN_MAX);                                      // 31 x 'x'
+    makeX(text, LINE_LEN_MAX);
     feedAll(reader, text);
     TEST_ASSERT_EQUAL(LINE_READY, lineFeed(reader, '\n'));
     TEST_ASSERT_EQUAL_STRING(text, reader.buf);
@@ -69,7 +64,7 @@ void test_32_is_too_long(void)
     LineReader reader;
     lineClear(reader);
     char text[LINE_LEN_MAX + 2];
-    makeX(text, LINE_LEN_MAX + 1);                                  // 32 x 'x'
+    makeX(text, LINE_LEN_MAX + 1);
     feedAll(reader, text);
     TEST_ASSERT_EQUAL(LINE_TOO_LONG, lineFeed(reader, '\n'));
 }
@@ -79,10 +74,10 @@ void test_recovers_after_too_long(void)
     LineReader reader;
     lineClear(reader);
     char text[41];
-    makeX(text, 40);                                                // 40 x 'x'
+    makeX(text, 40);
     feedAll(reader, text);
     TEST_ASSERT_EQUAL(LINE_TOO_LONG, lineFeed(reader, '\n'));
-    TEST_ASSERT_EQUAL(LINE_READY, feedAll(reader, "180 0\n"));      // next line is fine
+    TEST_ASSERT_EQUAL(LINE_READY, feedAll(reader, "180 0\n"));
     TEST_ASSERT_EQUAL_STRING("180 0", reader.buf);
 }
  
@@ -90,13 +85,12 @@ void test_empty_line_ignored(void)
 {
     LineReader reader;
     lineClear(reader);
-    TEST_ASSERT_EQUAL(LINE_NONE, lineFeed(reader, '\n'));           // only Enter
-    TEST_ASSERT_EQUAL(LINE_NONE, feedAll(reader, "\r\n"));          // Enter with '\r'
-    TEST_ASSERT_EQUAL(LINE_READY, feedAll(reader, "180 0\n"));      // still works after
+    TEST_ASSERT_EQUAL(LINE_NONE, lineFeed(reader, '\n'));
+    TEST_ASSERT_EQUAL(LINE_NONE, feedAll(reader, "\r\n"));
+    TEST_ASSERT_EQUAL(LINE_READY, feedAll(reader, "180 0\n"));
     TEST_ASSERT_EQUAL_STRING("180 0", reader.buf);
 }
  
-// Half line "245" is thrown away. Without lineClear it would become "245180 0".
 void test_clear_drops_half_line(void)
 {
     LineReader reader;
@@ -107,7 +101,6 @@ void test_clear_drops_half_line(void)
     TEST_ASSERT_EQUAL_STRING("180 0", reader.buf);
 }
  
-// Together with the parser: a line typed in the monitor ("\r\n" at the end)
 void test_ready_line_parses(void)
 {
     LineReader reader;
@@ -138,7 +131,7 @@ int runAllTests(void)
 #include <Arduino.h>
 void setup()
 {
-    delay(2000);       // wait for the Serial monitor
+    delay(2000);
     runAllTests();
 }
 void loop() {}

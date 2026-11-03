@@ -1,49 +1,15 @@
-/**
- * @file test_main.cpp
- * @brief Host tests for Controller: debounce, AUTO timing, MATLAB timeout, LED
- *
- * Every test drives the Controller only through its ctrl functions, with
- * made-up millis() values, the way main.cpp does with the real ones.
- *
- * @author Mohamed Sellami
- * @date 2026-11-03
- *
- */
 #include <unity.h>
 #include "Controller.h"
 
-/******************************************************************************
- Constants
-******************************************************************************/
-/* Switch readings, so the tests read like the hardware. */
 static const bool SWITCH_OPEN   = true;
 static const bool SWITCH_CLOSED = false;
 
-/* millis() a few seconds before the 32-bit wrap. */
 static const uint32_t NEAR_WRAP_MS = 4294967000u;
 
-/******************************************************************************
- Private Data
-******************************************************************************/
-/* Fresh for every test: setUp() runs before each one. */
 static Controller controller;
 
-/******************************************************************************
- Private Function Declarations
-******************************************************************************/
-/**
- * @brief Flip the switch at startMs and hold it still past the debounce time
- *
- * @param[in] switchOpen  New switch reading, true = open = AUTO.
- * @param[in] startMs     millis() when the switch is flipped.
- *
- * @return millis() when the new mode was accepted (startMs + DEBOUNCE_MS).
- */
 static uint32_t flipSwitch(bool switchOpen, uint32_t startMs);
 
-/******************************************************************************
- Function Definitions
-******************************************************************************/
 void setUp(void)
 {
     ctrlInit(controller, SWITCH_OPEN, 0u);
@@ -59,8 +25,6 @@ static uint32_t flipSwitch(bool switchOpen, uint32_t startMs)
     return acceptMs;
 }
 
-/* ---------- start ---------- */
-
 void test_init_takes_mode_from_switch(void)
 {
     ctrlInit(controller, SWITCH_OPEN, 0u);
@@ -69,8 +33,6 @@ void test_init_takes_mode_from_switch(void)
     TEST_ASSERT_EQUAL(MODE_MATLAB, controller.mode);
     TEST_ASSERT_FALSE(controller.error);
 }
-
-/* ---------- debounce ---------- */
 
 void test_same_position_never_changes_mode(void)
 {
@@ -94,7 +56,6 @@ void test_bounce_restarts_debounce(void)
     TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 100u));
     TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_OPEN, 130u));
     TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 140u));
-    /* 50 ms after the first flip, but only 40 ms after the last bounce. */
     TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 180u));
     TEST_ASSERT_TRUE(ctrlSwitch(controller, SWITCH_CLOSED, 190u));
 }
@@ -113,8 +74,6 @@ void test_mode_change_clears_error(void)
     (void)flipSwitch(SWITCH_CLOSED, 100u);
     TEST_ASSERT_FALSE(controller.error);
 }
-
-/* ---------- AUTO timing ---------- */
 
 void test_auto_first_cycle_runs_at_once(void)
 {
@@ -142,7 +101,6 @@ void test_back_to_auto_runs_at_once(void)
     TEST_ASSERT_TRUE(ctrlAutoDue(controller, 1000u));
     uint32_t matlabMs = flipSwitch(SWITCH_CLOSED, 2000u);
     uint32_t autoMs   = flipSwitch(SWITCH_OPEN, matlabMs + 1000u);
-    /* Only about 3 s after the last cycle, but switching to AUTO runs one now. */
     TEST_ASSERT_TRUE(ctrlAutoDue(controller, autoMs));
 }
 
@@ -160,8 +118,6 @@ void test_auto_result_sets_and_clears_error(void)
     ctrlAutoResult(controller, true);
     TEST_ASSERT_FALSE(controller.error);
 }
-
-/* ---------- MATLAB timeout ---------- */
 
 void test_matlab_timeout_after_180_s(void)
 {
@@ -201,7 +157,6 @@ void test_line_not_answered_sets_error(void)
     ctrlInit(controller, SWITCH_CLOSED, 0u);
     ctrlMatlabLine(controller, 1000u, false);
     TEST_ASSERT_TRUE(controller.error);
-    /* The line itself was good, so the timeout still restarts. */
     TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, 1000u + MATLAB_TIMEOUT_MS - 1u));
 }
 
@@ -218,8 +173,6 @@ void test_matlab_timeout_across_millis_wrap(void)
     TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, NEAR_WRAP_MS + MATLAB_TIMEOUT_MS - 1u));
     TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, NEAR_WRAP_MS + MATLAB_TIMEOUT_MS));
 }
-
-/* ---------- LED (moved from test_ledPattern) ---------- */
 
 void test_led_auto_slow_blink(void)
 {
@@ -257,10 +210,6 @@ void test_led_error_wins_over_matlab(void)
     TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
 }
 
-/*
- * 4294967295 / 1000 = 4294967 (odd), so the LED is off just before the wrap
- * and on at 0. The last off phase is only 296 ms long. Harmless.
- */
 void test_led_millis_wrap(void)
 {
     TEST_ASSERT_FALSE(ctrlLedOn(controller, 4294967000u));
@@ -304,7 +253,6 @@ int runAllTests(void)
 #include <Arduino.h>
 void setup()
 {
-    /* Wait for the Serial monitor to open. */
     delay(2000);
     runAllTests();
 }

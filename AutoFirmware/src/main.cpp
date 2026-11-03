@@ -1,22 +1,3 @@
-/**
- * @file main.cpp
- * @brief AutoFirmware for the left Nano: sun position (AUTO) or MATLAB angles
- *
- * The switch on PIN_MODE picks the mode. In AUTO the Nano reads the RTC every
- * AUTO_INTERVAL_MS and computes the sun position (AusgabeSonnenstand.m in C++).
- * In MATLAB mode it takes "azimuth elevation" lines from USB. Both modes send
- * the two target bytes to the right Nano over I2C. loop() never blocks.
- *
- * This file only talks to the hardware (switch, LED, USB, I2C, RTC). Every
- * decision (debounce, when to run, timeout, error, LED pattern) is made by
- * Controller, which is tested on the PC.
- *
- * Target: Arduino Nano (ATmega328P), Arduino framework (PlatformIO atmelavr). Level: L2.
- *
- * @author Mohamed Sellami
- * @date 2026-11-03
- *
- */
 #include <Arduino.h>
 #include <Wire.h>
 #include <ThreeWire.h>
@@ -29,106 +10,29 @@
 #include "Controller.h"
 #include "MatlabLink.h"
 
-/******************************************************************************
- Constants
-******************************************************************************/
-/* "YYYY-MM-DD hh:mm:ss" is 19 characters plus the end marker. */
 static const uint8_t TIME_TEXT_LEN = 20u;
 
-/******************************************************************************
- Private Data
-******************************************************************************/
-/* RTC driver. The constructors only store the pins; Rtc.Begin() in setup() sets them up. */
 static ThreeWire rtcWire(PIN_RTC_DAT, PIN_RTC_CLK, PIN_RTC_RST);
 static RtcDS1302<ThreeWire> Rtc(rtcWire);
 
-/*
- * State kept between loop() passes. Written and read only by loop() and the
- * functions it calls; no ISR uses it, so no protection is needed.
- */
-
-/* Mode, timers and error state. Set up by ctrlInit() in setup(). */
 static Controller controller;
-/* Collects USB characters into one line. */
 static LineReader reader;
-/* Last RTC reading, to see if the clock still moves. */
 static ClockWatch clockWatch = {false, 0uL, 0uL};
 
-/******************************************************************************
- Private Function Declarations
-******************************************************************************/
-/**
- * @brief Write one byte into a register of the right Nano
- *
- * Same as writeRegister(slave, reg, value, 'uint8') in MATLAB.
- *
- * @param[in] registerAddr  Register, REG_AZIMUTH or REG_ELEVATION.
- * @param[in] value         Byte to write, 0..255.
- *
- * @return Code of Wire.endTransmission(): 0 = OK (ACK), 1 = data too long,
- *         2 = no answer (address NACK), 3 = data NACK, 4 = other error,
- *         5 = timeout (stuck bus, TWI was reset).
- *
- * @note Blocks at most WIRE_TIMEOUT_US.
- */
 static uint8_t writeRegister(uint8_t registerAddr, uint8_t value);
 
-/**
- * @brief Send a target to the right Nano and print it
- *
- * Turns the angles into the two bytes (or the park bytes at night), prints
- * "  az=..  el=..  azByte=..  elByte=..  [PARK]  ack=../.." and ends the line.
- *
- * @param[in] azimuthDeg    Azimuth, deg.
- * @param[in] elevationDeg  Elevation, deg.
- *
- * @return true if the right Nano answered OK to both bytes, or SEND_I2C is
- *         false. false if one of the two transfers failed.
- */
 static bool sendTarget(float azimuthDeg, float elevationDeg);
 
-/**
- * @brief Print the current mode on Serial
- */
 static void printMode(void);
 
-/**
- * @brief Throw away all USB input that was not used yet
- *
- * Empties the receive buffer of the Nano and the half line in the LineReader.
- */
 static void flushInput(void);
 
-/**
- * @brief Run one AUTO cycle: read the RTC, compute the sun position, send it
- *
- * Reports a failure to the Controller if the RTC is stopped, not valid or
- * frozen (nothing is sent then), or if the right Nano does not answer.
- *
- * @param[in] now  millis() of this loop pass.
- */
 static void autoCycle(uint32_t now);
 
-/**
- * @brief Handle one full line from USB (in reader.buf)
- *
- * In AUTO the line is ignored. In MATLAB mode a good line is sent and
- * restarts the timeout; a broken line is ignored and the timeout keeps running.
- *
- * @param[in] now  millis() of this loop pass.
- */
 static void handleLine(uint32_t now);
 
-/**
- * @brief Read every character waiting on USB and handle full lines
- *
- * @param[in] now  millis() of this loop pass.
- */
 static void readSerial(uint32_t now);
 
-/******************************************************************************
- Function Definitions
-******************************************************************************/
 static uint8_t writeRegister(uint8_t registerAddr, uint8_t value)
 {
     Wire.beginTransmission(SLAVE_ADDR);
@@ -177,7 +81,6 @@ static void printMode(void)
 static void flushInput(void)
 {
     while (Serial.available() > 0) {
-        /* The byte is not needed; reading it is what removes it. */
         (void)Serial.read();
     }
     lineClear(reader);
@@ -185,10 +88,6 @@ static void flushInput(void)
 
 static void autoCycle(uint32_t now)
 {
-    /*
-     * GetDateTime() masks the clock-halt bit, so a stopped clock still gives
-     * a valid-looking time. Only GetIsRunning() shows it.
-     */
     if (!Rtc.GetIsRunning()) {
         Serial.println(F("AUTO    RTC stopped -> nothing sent"));
         ctrlAutoResult(controller, false);
@@ -203,7 +102,6 @@ static void autoCycle(uint32_t now)
         return;
     }
 
-    /* A valid time that does not move means a dead crystal. */
     if (clockFrozen(clockWatch, now, rtcTime.TotalSeconds())) {
         Serial.println(F("AUTO    RTC frozen -> nothing sent"));
         ctrlAutoResult(controller, false);
@@ -287,7 +185,6 @@ void loop()
     uint32_t now = millis();
 
     if (ctrlSwitch(controller, digitalRead(PIN_MODE) == HIGH, now)) {
-        /* Old USB data belongs to the other mode. */
         flushInput();
         printMode();
     }

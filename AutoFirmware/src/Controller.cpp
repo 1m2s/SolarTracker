@@ -1,28 +1,9 @@
-/**
- * @file Controller.cpp
- * @brief Implementation of the mode, timing, error and LED decisions
- *
- * Each function does what the matching lines of main.cpp did before, in the
- * same order. All time checks go through isDue, so they stay correct across
- * the millis() wrap.
- *
- * @author Mohamed Sellami
- * @date 2026-11-03
- *
- */
 #include "Controller.h"
 #include "TimeChecks.h"
 
-/******************************************************************************
- Constants
-******************************************************************************/
-/* LED blink half-periods: error = 0.2 s on, 0.2 s off; AUTO OK = 1 s on, 1 s off. */
 static const uint32_t ERROR_BLINK_MS = 200uL;
 static const uint32_t AUTO_BLINK_MS  = 1000uL;
 
-/******************************************************************************
- Function Definitions
-******************************************************************************/
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
 {
     controller.mode            = switchOpen ? MODE_AUTO : MODE_MATLAB;
@@ -37,7 +18,6 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
 {
-    /* Any change restarts the debounce time, so a bouncing contact never counts. */
     if (switchOpen != controller.lastSwitchOpen) {
         controller.lastSwitchOpen  = switchOpen;
         controller.switchChangedMs = nowMs;
@@ -100,7 +80,6 @@ bool ctrlMatlabTimedOut(Controller &controller, uint32_t nowMs)
 
 bool ctrlLedOn(const Controller &controller, uint32_t nowMs)
 {
-    /* The order of the checks is the priority: an error always wins. */
     if (controller.error) {
         return (nowMs / ERROR_BLINK_MS) % 2u == 0u;
     }

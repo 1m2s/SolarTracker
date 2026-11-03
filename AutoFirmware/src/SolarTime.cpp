@@ -1,24 +1,7 @@
-/**
- * @file SolarTime.cpp
- * @brief Implementation of the time half of the MATLAB sun chain
- *
- * Each function is a line-by-line port of its MATLAB file, with the same
- * order of operations. Numbers end in f so the math stays in float.
- *
- * From MATLAB: JahresTag.m, MEZ.m, MOZ.m, Zeitgleichung.m, StundenWinkel.m
- *
- * @author Mohamed Sellami
- * @date 2026-11-03
- *
- */
 #include <math.h>
 #include "SolarTime.h"
 #include "AngleConversion.h"
  
-/******************************************************************************
- Function Definitions
-******************************************************************************/
-/* From MATLAB: JahresTag.m (MATLAB counts from 1, so MTage(1) is daysInMonth[0]) */
 int dayOfYear(int month, int day)
 {
     const int daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -32,7 +15,6 @@ int dayOfYear(int month, int day)
     return dayNumber;
 }
  
-/* From MATLAB: MEZ.m (tf == 1 is summerTime == true, tf == 0 is false) */
 int cetMinutes(int hour, int minute, bool summerTime)
 {
     int cetHour = hour;
@@ -45,14 +27,12 @@ int cetMinutes(int hour, int minute, bool summerTime)
     return cetMin;
 }
  
-/* From MATLAB: MOZ.m */
 float meanLocalMinutes(float cetMin, float longitudeDeg)
 {
     float meanLocalMin = cetMin - 4.0f * (15.0f - longitudeDeg);
     return meanLocalMin;
 }
  
-/* From MATLAB: Zeitgleichung.m (cosf needs rad, MATLAB gives the angles in deg) */
 float equationOfTime(float yearAngleDeg)
 {
     float term1Rad = degToRad(yearAngleDeg + 85.9f);
@@ -65,7 +45,6 @@ float equationOfTime(float yearAngleDeg)
     return equationOfTimeMin;
 }
  
-/* From MATLAB: StundenWinkel.m */
 float hourAngle(float trueSolarMin)
 {
     float trueSolarHours = trueSolarMin / 60.0f;

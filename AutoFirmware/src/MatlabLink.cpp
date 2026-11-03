@@ -1,42 +1,13 @@
-/**
- * @file MatlabLink.cpp
- * @brief Implementation of the USB line reader and the angle parser
- *
- * The numbers are read with strtod, not sscanf("%f"): on the Nano, sscanf
- * cannot read floats by default. The results are written only after every
- * check passed, so a broken line never changes the old angles.
- *
- * @author Mohamed Sellami
- * @date 2026-11-03
- *
- */
 #include <stdlib.h>
 #include "MatlabLink.h"
 
-/******************************************************************************
- Constants
-******************************************************************************/
-/* Possible angles, deg. Anything outside is broken data. */
 static const float AZIMUTH_MIN_DEG   = 0.0f;
 static const float AZIMUTH_MAX_DEG   = 360.0f;
 static const float ELEVATION_MIN_DEG = -90.0f;
 static const float ELEVATION_MAX_DEG = 90.0f;
 
-/******************************************************************************
- Private Function Declarations
-******************************************************************************/
-/**
- * @brief Check if a character is a blank
- *
- * @param[in] character  Character to check.
- *
- * @return true for space, tab, '\r' and '\n', false otherwise.
- */
 static bool isBlank(char character);
 
-/******************************************************************************
- Function Definitions
-******************************************************************************/
 LineStatus lineFeed(LineReader &reader, char character)
 {
     if (character == '\r') {
@@ -56,7 +27,6 @@ LineStatus lineFeed(LineReader &reader, char character)
         return LINE_READY;
     }
 
-    /* B3: never write past buf; remember the overflow and wait for '\n'. */
     if (reader.len < LINE_LEN_MAX) {
         reader.buf[reader.len] = character;
         reader.len++;
@@ -86,7 +56,6 @@ bool parseAngles(const char *line, float &azimuthDeg, float &elevationDeg)
     if (parseEnd == line) {
         return false;
     }
-    /* A blank must follow, or "245.413.86" would be read as 245.413 and 0.86. */
     if (!isBlank(*parseEnd)) {
         return false;
     }
@@ -104,7 +73,6 @@ bool parseAngles(const char *line, float &azimuthDeg, float &elevationDeg)
         return false;
     }
 
-    /* Written as !(in range) so that NaN is rejected too. */
     if (!(parsedAzimuthDeg >= AZIMUTH_MIN_DEG && parsedAzimuthDeg <= AZIMUTH_MAX_DEG)) {
         return false;
     }

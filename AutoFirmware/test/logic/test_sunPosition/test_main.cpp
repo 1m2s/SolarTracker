@@ -5,9 +5,6 @@
 #include "SunAngles.h"
 #include "SunPosition.h"
  
-// Expected values come from MATLAB (see generate_reference.m).
-// TOL = 0.001 degrees: far below the motor resolution (2 deg / 1 deg)
-// and big enough for small float differences between PC and Nano.
 #define TOL 0.001f
  
 const float LATITUDE_DEG  = 47.81f;
@@ -15,8 +12,6 @@ const float LONGITUDE_DEG = 9.66f;
  
 void setUp(void) {}
 void tearDown(void) {}
- 
-// ---------- small functions ----------
  
 void test_degToRad(void)
 {
@@ -38,8 +33,8 @@ void test_dayOfYear(void)
  
 void test_cetMinutes(void)
 {
-    TEST_ASSERT_EQUAL_INT(720, cetMinutes(12, 0, false));   // winter time
-    TEST_ASSERT_EQUAL_INT(720, cetMinutes(13, 0, true));    // summer time: 13:00 = 12:00 CET
+    TEST_ASSERT_EQUAL_INT(720, cetMinutes(12, 0, false));
+    TEST_ASSERT_EQUAL_INT(720, cetMinutes(13, 0, true));
 }
  
 void test_meanLocalMinutes(void)
@@ -49,8 +44,8 @@ void test_meanLocalMinutes(void)
  
 void test_hourAngle(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 0.0f,  hourAngle(720.0f));  // noon
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 30.0f, hourAngle(600.0f));  // 10:00
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 0.0f,  hourAngle(720.0f));
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 30.0f, hourAngle(600.0f));
 }
  
 void test_equationOfTime(void)
@@ -68,23 +63,18 @@ void test_declination(void)
  
 void test_elevation_equinox_noon(void)
 {
-    // Physics check: noon (hour angle = 0), declination = 0 -> 90 - latitude
     TEST_ASSERT_FLOAT_WITHIN(TOL, 90.0f - LATITUDE_DEG, elevation(0.0f, LATITUDE_DEG, 0.0f));
 }
  
 void test_azimuth_noon(void)
 {
-    // acos is very sensitive near 1 in float -> looser tolerance (see SunAngles.cpp)
     TEST_ASSERT_FLOAT_WITHIN(0.05f, 180.0f, azimuth(172, LATITUDE_DEG, 720.0f));
 }
  
 void test_azimuth_zenith_is_nan(void)
 {
-    // Sun straight overhead (latitude = declination, noon): no azimuth -> NaN -> park
     TEST_ASSERT_TRUE(isnan(azimuth(172, declination(172), 720.0f)));
 }
- 
-// ---------- full chain ----------
  
 void check_sunPosition(int day, int month, int hour, int minute, bool summerTime,
                        float expectedAzimuthDeg, float expectedElevationDeg)
@@ -125,7 +115,7 @@ int runAllTests(void)
 #include <Arduino.h>
 void setup()
 {
-    delay(2000);       // wait for the Serial monitor
+    delay(2000);
     runAllTests();
 }
 void loop() {}
