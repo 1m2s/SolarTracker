@@ -36,18 +36,18 @@ struct ClockWatch {
  Function Declarations
 ******************************************************************************/
 /**
- * @brief Check if at least interval ms have passed since last
+ * @brief Check if at least intervalMs have passed since lastMs
  *
- * @param[in] now       millis() now.
- * @param[in] last      millis() at the start of the wait.
- * @param[in] interval  Wait time, ms, 0..4294967295.
+ * @param[in] nowMs       millis() now.
+ * @param[in] lastMs      millis() at the start of the wait.
+ * @param[in] intervalMs  Wait time, ms, 0..4294967295.
  *
- * @return true if now - last >= interval, false otherwise.
+ * @return true if nowMs - lastMs >= intervalMs, false otherwise.
  *
  * @note Correct across the millis() wrap (A6), because unsigned subtraction
- *       wraps the same way. The check now >= last + interval would not be.
+ *       wraps the same way. The check nowMs >= lastMs + intervalMs would not be.
  */
-bool isDue(uint32_t now, uint32_t last, uint32_t interval);
+bool isDue(uint32_t nowMs, uint32_t lastMs, uint32_t intervalMs);
 
 /**
  * @brief Check if the RTC time has stopped moving
