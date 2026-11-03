@@ -1,4 +1,5 @@
 #include <unity.h>
+#include <math.h>
 #include "grad2rad.h"
 #include "rad2grad.h"
 #include "JahresTag.h"
@@ -84,6 +85,12 @@ void test_Azimut_noon(void)
     TEST_ASSERT_FLOAT_WITHIN(0.05f, 180.0f, Azimut(172, Breite, 720.0f));
 }
  
+void test_Azimut_zenith_is_nan(void)
+{
+    // Sun straight overhead (Breite = delta, noon): no azimuth -> NaN -> park
+    TEST_ASSERT_TRUE(isnan(Azimut(172, Deklination(172), 720.0f)));
+}
+ 
 // ---------- full chain ----------
  
 void check_SonnenStand(int Tag, int Monat, int Stunde, int Minute, int tf,
@@ -113,6 +120,7 @@ int runAllTests(void)
     RUN_TEST(test_Deklination);
     RUN_TEST(test_HoehenWinkel_equinox_noon);
     RUN_TEST(test_Azimut_noon);
+    RUN_TEST(test_Azimut_zenith_is_nan);
     RUN_TEST(test_SonnenStand_26Oct_1200);
     RUN_TEST(test_SonnenStand_26Oct_1500);
     RUN_TEST(test_SonnenStand_27Oct_1200);
@@ -134,4 +142,3 @@ int main(void)
     return runAllTests();
 }
 #endif
- 
