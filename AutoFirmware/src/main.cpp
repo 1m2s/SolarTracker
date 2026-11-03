@@ -26,6 +26,7 @@
 #include "isDue.h"
 #include "LineReader.h"
 #include "parseAngles.h"
+#include "ClockWatch.h"
 
 // ---------- settings ----------
 const bool     SEND_I2C          = true;      // false = Serial only, true = motors move
@@ -61,6 +62,7 @@ uint32_t   rawSince   = 0;           // millis() when that reading last changed
 LineReader reader;                   // collects USB characters into a line
 uint32_t   lastMatlab = 0;           // millis() of the last good MATLAB line
 bool       timedOut   = false;       // MATLAB timeout already reported
+ClockWatch clockWatch = {false, 0, 0};   // last RTC time, to spot a frozen clock
 
 // MATLAB: writeRegister(slave, reg, value, 'uint8')
 // Gives back the answer code: 0 = OK (ACK), 2 = no answer, 5 = bus timeout
@@ -139,14 +141,29 @@ bool updateMode(uint32_t now)
 }
 
 // One AUTO cycle: read clock -> SonnenStand -> sendTarget.
-// Sets error = true if the clock is bad or the right Nano does not answer.
-void autoCycle()
+// Sets error = true if the clock is stopped, bad or frozen,
+// or if the right Nano does not answer.
+void autoCycle(uint32_t now)
 {
+    // Halt bit set: the clock stands still, but GetDateTime still looks valid
+    if (!Rtc.GetIsRunning()) {
+        Serial.println(F("AUTO    RTC stopped -> nothing sent"));
+        error = true;
+        return;
+    }
+
     RtcDateTime t = Rtc.GetDateTime();   // MATLAB: clock
 
     // Clock check: same rule as test_rtc (valid date, year 2026 or later)
     if (!t.IsValid() || t.Year() < 2026) {
         Serial.println(F("AUTO    RTC not valid -> nothing sent"));
+        error = true;
+        return;
+    }
+
+    // Time valid, but it does not move (e.g. dead crystal)
+    if (clockFrozen(clockWatch, now, t.TotalSeconds())) {
+        Serial.println(F("AUTO    RTC frozen -> nothing sent"));
         error = true;
         return;
     }
@@ -244,7 +261,7 @@ void loop()
     if (mode == MODE_AUTO && (runNow || isDue(now, lastCycle, INTERVAL_MS))) {
         runNow    = false;
         lastCycle = now;
-        autoCycle();
+        autoCycle(now);
     }
 
     // 4) MATLAB: no good line for too long -> report once, fast blink
