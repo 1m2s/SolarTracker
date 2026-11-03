@@ -24,21 +24,21 @@
  *
  * From MATLAB: grad2rad.m
  *
- * @param[in] grad  Angle, deg. Any finite value.
+ * @param[in] angleDeg  Angle, deg. Any finite value.
  *
  * @return The same angle in rad.
  */
-float grad2rad(float grad);
+float degToRad(float angleDeg);
 
 /**
  * @brief Convert radians to degrees
  *
  * From MATLAB: rad2grad.m
  *
- * @param[in] rad  Angle, rad. Any finite value.
+ * @param[in] angleRad  Angle, rad. Any finite value.
  *
  * @return The same angle in deg.
  */
-float rad2grad(float rad);
+float radToDeg(float angleRad);
 
 #endif /* ANGLECONVERSION_H */

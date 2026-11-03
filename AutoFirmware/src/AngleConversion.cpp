@@ -19,13 +19,13 @@
  Function Definitions
 ******************************************************************************/
 /* From MATLAB: grad2rad.m */
-float grad2rad(float grad)
+float degToRad(float angleDeg)
 {
-    return grad * (float)M_PI / 180.0f;
+    return angleDeg * (float)M_PI / 180.0f;
 }
 
 /* From MATLAB: rad2grad.m (same order: divide by pi first, then times 180) */
-float rad2grad(float rad)
+float radToDeg(float angleRad)
 {
-    return rad / (float)M_PI * 180.0f;
+    return angleRad / (float)M_PI * 180.0f;
 }

@@ -36,7 +36,7 @@ void test_nan_is_zero(void)
     TEST_ASSERT_EQUAL_UINT8(0, toUint8(NAN));
 }
 
-// 27 Oct 12:00 MEZ: alpha 178.5591, gamma 29.6214 (from generate_reference.m)
+// 27 Oct 12:00 CET: azimuth 178.5591, elevation 29.6214 (from generate_reference.m)
 void test_27Oct_1200(void)
 {
     TEST_ASSERT_EQUAL_UINT8(89, toUint8(178.5591f / 2.0f));

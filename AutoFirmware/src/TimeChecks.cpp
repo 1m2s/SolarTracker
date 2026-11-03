@@ -31,17 +31,17 @@ bool isDue(uint32_t now, uint32_t last, uint32_t interval)
     return passed >= interval;
 }
 
-bool clockFrozen(ClockWatch &w, uint32_t nowMs, uint32_t rtcSecs)
+bool clockFrozen(ClockWatch &watch, uint32_t nowMs, uint32_t rtcSeconds)
 {
     /*
-     * w.ms is set only when the time changes, so many quick readings of the
-     * same second cannot keep pushing the 2 s limit back.
+     * watch.firstSeenMs is set only when the time changes, so many quick
+     * readings of the same second cannot keep pushing the 2 s limit back.
      */
-    if (!w.have || rtcSecs != w.secs) {
-        w.have = true;
-        w.secs = rtcSecs;
-        w.ms   = nowMs;
+    if (!watch.hasReading || rtcSeconds != watch.rtcSeconds) {
+        watch.hasReading  = true;
+        watch.rtcSeconds  = rtcSeconds;
+        watch.firstSeenMs = nowMs;
         return false;
     }
-    return isDue(nowMs, w.ms, FROZEN_MS);
+    return isDue(nowMs, watch.firstSeenMs, FROZEN_MS);
 }

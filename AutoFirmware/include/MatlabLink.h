@@ -3,9 +3,9 @@
  * @brief Read the angle lines that MATLAB sends over USB
  *
  * In MATLAB mode, AusgabeSonnenstandSerial.m sends one line per target, e.g.
- * "245.41 3.86\n" (alpha gamma, in deg). USB delivers it one character at a
- * time: lineFeed collects the characters into a line, parseAngles turns the
- * finished line into two checked angles.
+ * "245.41 3.86\n" (azimuth elevation, in deg). USB delivers it one character
+ * at a time: lineFeed collects the characters into a line, parseAngles turns
+ * the finished line into two checked angles.
  *
  * Target: Arduino Nano (ATmega328P) and PC (host tests). Level: L2.
  *
@@ -59,41 +59,43 @@ struct LineReader {
  * LINE_TOO_LONG and starts fresh, so a long line never overruns buf and
  * never sticks to the next line.
  *
- * @param[in,out] r  Reader state.
- * @param[in]     c  Character from USB.
+ * @param[in,out] reader     Reader state.
+ * @param[in]     character  Character from USB.
  *
- * @return LINE_READY when a full line is in r.buf, LINE_TOO_LONG when a too
- *         long line was thrown away, LINE_NONE otherwise (also for an empty
- *         line).
+ * @return LINE_READY when a full line is in reader.buf, LINE_TOO_LONG when a
+ *         too long line was thrown away, LINE_NONE otherwise (also for an
+ *         empty line).
  *
- * @note After LINE_READY, use r.buf right away: the next character starts
- *       writing over it.
+ * @note After LINE_READY, use reader.buf right away: the next character
+ *       starts writing over it.
  */
-LineStatus lineFeed(LineReader &r, char c);
+LineStatus lineFeed(LineReader &reader, char character);
 
 /**
  * @brief Throw away a half line and start fresh
  *
- * @param[out] r  Reader state, emptied.
+ * @param[out] reader  Reader state, emptied.
  */
-void lineClear(LineReader &r);
+void lineClear(LineReader &reader);
 
 /**
- * @brief Read "alpha gamma" from one MATLAB line
+ * @brief Read "azimuth elevation" from one MATLAB line
  *
  * Given a line like "245.41 3.86", reads two numbers separated by blanks.
  * Blanks after the second number are allowed, anything else is not.
  *
- * @param[in]  line   Text ending in '\0'. Must not be NULL.
- * @param[out] alpha  Azimuth, deg, 0..360. Written only if the line is OK.
- * @param[out] gamma  Elevation, deg, -90..90. Written only if the line is OK.
+ * @param[in]  line          Text ending in '\0'. Must not be NULL.
+ * @param[out] azimuthDeg    Azimuth, deg, 0..360. Written only if the line is
+ *                           OK.
+ * @param[out] elevationDeg  Elevation, deg, -90..90. Written only if the line
+ *                           is OK.
  *
  * @return true if the line is OK, false if it is broken or out of range
- *         (then alpha and gamma keep their old values).
+ *         (then azimuthDeg and elevationDeg keep their old values).
  *
  * @note Night values like "250.1 -5.2" are OK here; targetBytes parks them
  *       later, the same as in AUTO.
  */
-bool parseAngles(const char *line, float &alpha, float &gamma);
+bool parseAngles(const char *line, float &azimuthDeg, float &elevationDeg);
 
 #endif /* MATLABLINK_H */

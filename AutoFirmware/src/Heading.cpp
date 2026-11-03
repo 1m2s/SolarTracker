@@ -13,57 +13,57 @@ const float SOFT_XX = 0.9529f;
 const float SOFT_XY = 0.1789f;
 const float SOFT_YY = 1.0830f;
 
-const float RAD2GRAD = 180.0f / (float)M_PI;
+const float DEG_PER_RAD = 180.0f / (float)M_PI;
 
-void magCalibrated(int16_t mx, int16_t my, int16_t mz, float &Mx, float &My, float &Mz)
+void magCalibrated(int16_t magRawX, int16_t magRawY, int16_t magRawZ, float &magX, float &magY, float &magZ)
 {
     // 1) move the centre to 0
-    float x = mx * MAG_SCALE - MX_CENTRE;
-    float y = my * MAG_SCALE - MY_CENTRE;
+    float centredX = magRawX * MAG_SCALE - MX_CENTRE;
+    float centredY = magRawY * MAG_SCALE - MY_CENTRE;
 
     // 2) stretch the oval back into a circle
-    Mx = SOFT_XX * x + SOFT_XY * y;
-    My = SOFT_XY * x + SOFT_YY * y;
+    magX = SOFT_XX * centredX + SOFT_XY * centredY;
+    magY = SOFT_XY * centredX + SOFT_YY * centredY;
 
-    Mz = mz * MAG_SCALE - MZ_CENTRE;
+    magZ = magRawZ * MAG_SCALE - MZ_CENTRE;
 }
 
-// Keeps x inside -1..1, so asin never gives NaN.
-static float clamp1(float x)
+// Keeps value inside -1..1, so asin never gives NaN.
+static float clampToUnitRange(float value)
 {
-    if (x > 1.0f) {
+    if (value > 1.0f) {
         return 1.0f;
     }
-    if (x < -1.0f) {
+    if (value < -1.0f) {
         return -1.0f;
     }
-    if (!(x >= -1.0f)) {     // NaN: every compare with NaN is false
+    if (!(value >= -1.0f)) { // NaN: every compare with NaN is false
         return 0.0f;
     }
-    return x;
+    return value;
 }
 
-float tiltHeading(float Ax, float Ay, float Mx, float My, float Mz)
+float tiltHeading(float accelX, float accelY, float magX, float magY, float magZ)
 {
-    float pitch = asinf(clamp1(-Ax));                   // getpitch()
-    float roll  = asinf(clamp1(Ay / cosf(pitch)));      // getroll()
+    float pitchRad = asinf(clampToUnitRange(-accelX));                   // getpitch()
+    float rollRad  = asinf(clampToUnitRange(accelY / cosf(pitchRad)));   // getroll()
 
     // getTiltHeading()
-    float xh = Mx * cosf(pitch) + Mz * sinf(pitch);
-    float yh = Mx * sinf(roll) * sinf(pitch) + My * cosf(roll)
-             - Mz * sinf(roll) * cosf(pitch);
+    float horizontalX = magX * cosf(pitchRad) + magZ * sinf(pitchRad);
+    float horizontalY = magX * sinf(rollRad) * sinf(pitchRad) + magY * cosf(rollRad)
+                      - magZ * sinf(rollRad) * cosf(pitchRad);
 
-    float h = atan2f(yh, xh) * RAD2GRAD;
-    if (yh < 0) {
-        h += 360.0f;
+    float headingDeg = atan2f(horizontalY, horizontalX) * DEG_PER_RAD;
+    if (horizontalY < 0) {
+        headingDeg += 360.0f;
     }
-    h = 360.0f - h;
+    headingDeg = 360.0f - headingDeg;
 
-    h = fmodf(h, 360.0f);    // see note 4
-    if (h < 0) {
-        h += 360.0f;
+    headingDeg = fmodf(headingDeg, 360.0f);    // see note 4
+    if (headingDeg < 0) {
+        headingDeg += 360.0f;
     }
-    return h;
+    return headingDeg;
 }
 
 /* Notes
@@ -77,13 +77,14 @@ float tiltHeading(float Ax, float Ay, float Mx, float My, float Mz)
 
 3) Tilt: pitch and roll come from the accelerometer, so a tilted base
    still gives the right heading. On a level base pitch = roll = 0
-   and the formula becomes h = 360 - atan2(My, Mx).
+   and the formula becomes headingDeg = 360 - atan2(magY, magX).
 
 4) Two small changes to the original code, both on the edges:
    - The old code could give 360 instead of 0 (same direction).
-     fmodf keeps the result in 0 <= h < 360.
+     fmodf keeps the result in 0 <= headingDeg < 360.
    - asin of a value just above 1 (sensor noise) gives NaN.
-     clamp1 cuts it to 1 first. Same idea as the acos clamp in Azimut.
+     clampToUnitRange cuts it to 1 first. Same idea as the acos clamp
+     in azimuth().
 
 5) Calibration (magCalibrated), two steps:
    - Centre: turning the tracker should draw a circle around 0.

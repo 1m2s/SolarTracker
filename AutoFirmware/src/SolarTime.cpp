@@ -3,8 +3,7 @@
  * @brief Implementation of the time half of the MATLAB sun chain
  *
  * Each function is a line-by-line port of its MATLAB file, with the same
- * names and the same order of operations. Numbers end in f so the math
- * stays in float.
+ * order of operations. Numbers end in f so the math stays in float.
  *
  * From MATLAB: JahresTag.m, MEZ.m, MOZ.m, Zeitgleichung.m, StundenWinkel.m
  *
@@ -20,55 +19,55 @@
  Function Definitions
 ******************************************************************************/
 /* From MATLAB: JahresTag.m (MATLAB counts from 1, so MTage(1) is MTage[0]) */
-int JahresTag(int Monat, int Tag)
+int dayOfYear(int month, int day)
 {
-    const int MTage[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int d = Tag;
+    const int daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int dayNumber = day;
 
-    if (Monat > 1) {
-        for (int i = 0; i < Monat - 1; i++) {
-            d = d + MTage[i];
+    if (month > 1) {
+        for (int monthIndex = 0; monthIndex < month - 1; monthIndex++) {
+            dayNumber = dayNumber + daysInMonth[monthIndex];
         }
     }
-    return d;
+    return dayNumber;
 }
 
 /* From MATLAB: MEZ.m */
-int MEZ(int Stunde, int Minute, int tf)
+int cetMinutes(int hour, int minute, int summerTimeFlag)
 {
-    int MEZ_Stunde = Stunde;
-    if (tf == 1) {
-        MEZ_Stunde = Stunde - 1;
-    } else if (tf == 0) {
-        MEZ_Stunde = Stunde;
+    int cetHour = hour;
+    if (summerTimeFlag == 1) {
+        cetHour = hour - 1;
+    } else if (summerTimeFlag == 0) {
+        cetHour = hour;
     }
 
-    int MEZ_Minute = Minute;
-    int Min_MEZ    = MEZ_Minute + MEZ_Stunde * 60;
-    return Min_MEZ;
+    int cetMinute = minute;
+    int cetMin    = cetMinute + cetHour * 60;
+    return cetMin;
 }
 
 /* From MATLAB: MOZ.m */
-float MOZ(float Min_MEZ, float lambda)
+float meanLocalMinutes(float cetMin, float longitudeDeg)
 {
-    float Min_MOZ = Min_MEZ - 4.0f * (15.0f - lambda);
-    return Min_MOZ;
+    float meanLocalMin = cetMin - 4.0f * (15.0f - longitudeDeg);
+    return meanLocalMin;
 }
 
 /* From MATLAB: Zeitgleichung.m (cosf needs rad, MATLAB gives the angles in deg) */
-float Zeitgleichung(float Jg)
+float equationOfTime(float yearAngleDeg)
 {
-    float a1 = grad2rad(Jg + 85.9f);
-    float a2 = grad2rad(2.0f * Jg + 108.9f);
-    float a3 = grad2rad(3.0f * Jg + 105.2f);
-    float zgl = 0.0066f + 7.3525f * cosf(a1) + 9.9359f * cosf(a2) + 0.3387f * cosf(a3);
-    return zgl;
+    float term1Rad = degToRad(yearAngleDeg + 85.9f);
+    float term2Rad = degToRad(2.0f * yearAngleDeg + 108.9f);
+    float term3Rad = degToRad(3.0f * yearAngleDeg + 105.2f);
+    float equationOfTimeMin = 0.0066f + 7.3525f * cosf(term1Rad) + 9.9359f * cosf(term2Rad) + 0.3387f * cosf(term3Rad);
+    return equationOfTimeMin;
 }
 
 /* From MATLAB: StundenWinkel.m */
-float StundenWinkel(float Min_WOZ)
+float hourAngle(float trueSolarMin)
 {
-    float WOZ_h = Min_WOZ / 60.0f;
-    float beta  = (12.0f - WOZ_h) * 15.0f;
-    return beta;
+    float trueSolarHours = trueSolarMin / 60.0f;
+    float hourAngleDeg   = (12.0f - trueSolarHours) * 15.0f;
+    return hourAngleDeg;
 }

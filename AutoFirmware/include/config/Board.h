@@ -33,9 +33,9 @@ const uint8_t PIN_RTC_RST = 7u;
 /* I2C address of the right Nano (MotorFirmware). MATLAB uses the same one. */
 const uint8_t SLAVE_ADDR = 0x19u;
 
-/* Registers of the right Nano: azimuth byte (a8) and elevation byte (g8). */
-const uint8_t REG_ALPHA = 254u;
-const uint8_t REG_GAMMA = 255u;
+/* Registers of the right Nano: azimuth byte and elevation byte. */
+const uint8_t REG_AZIMUTH   = 254u;
+const uint8_t REG_ELEVATION = 255u;
 
 /*
  * A transfer that takes longer than this is given up and the TWI is reset.

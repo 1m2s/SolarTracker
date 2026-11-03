@@ -38,17 +38,17 @@ const uint32_t MATLAB_TIMEOUT_MS = 180000uL;
 const uint32_t PULLUP_SETTLE_MS = 10uL;
 
 /* Location of the tracker, same values as in AusgabeSonnenstand.m. */
-const float BREITE_DEG = 47.81f;
-const float LAENGE_DEG = 9.66f;
+const float LATITUDE_DEG  = 47.81f;
+const float LONGITUDE_DEG = 9.66f;
 
 /* An RTC year below this means the clock was never set or lost its time. */
 const uint16_t RTC_YEAR_MIN = 2026u;
 
 /*
- * Summer-time flag for SonnenStand: 0 = MEZ (winter time), 1 = summer time.
- * The RTC is always set to MEZ, so this stays 0 all year.
+ * Summer-time flag for sunPosition: 0 = CET (winter time), 1 = summer time.
+ * The RTC is always set to CET, so this stays 0 all year.
  */
-const int CLOCK_TF = 0;
+const int SUMMER_TIME_FLAG = 0;
 
 /******************************************************************************
  Types

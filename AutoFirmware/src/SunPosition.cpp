@@ -3,7 +3,8 @@
  * @brief Implementation of the sun position entry point
  *
  * Calls the MATLAB chain in the same order as SonnenStand.m. The int-to-float
- * casts are exact: d (1..365) and Min_MEZ (-60..1439) fit a float without loss.
+ * casts are exact: dayNumber (1..365) and cetMin (-60..1439) fit a float
+ * without loss.
  *
  * From MATLAB: SonnenStand.m
  *
@@ -19,21 +20,21 @@
  Function Definitions
 ******************************************************************************/
 /* From MATLAB: SonnenStand.m */
-void SonnenStand(float Breite, float Laenge, int Tag, int Monat,
-                 int Stunde, int Minute, int tf,
-                 float &alpha, float &gamma)
+void sunPosition(float latitudeDeg, float longitudeDeg, int day, int month,
+                 int hour, int minute, int summerTimeFlag,
+                 float &azimuthDeg, float &elevationDeg)
 {
-    int   Min_MEZ = MEZ(Stunde, Minute, tf);
-    float Min_MOZ = MOZ((float)Min_MEZ, Laenge);
+    int   cetMin            = cetMinutes(hour, minute, summerTimeFlag);
+    float meanLocalMin      = meanLocalMinutes((float)cetMin, longitudeDeg);
 
-    int   d       = JahresTag(Monat, Tag);
-    /* 365.0f, not 365: d is an int, so d / 365 would be 0. */
-    float Jg      = (float)d / 365.0f * 360.0f;
-    float zgl     = Zeitgleichung(Jg);
-    float Min_WOZ = Min_MOZ + zgl;
+    int   dayNumber         = dayOfYear(month, day);
+    /* 365.0f, not 365: dayNumber is an int, so dayNumber / 365 would be 0. */
+    float yearAngleDeg      = (float)dayNumber / 365.0f * 360.0f;
+    float equationOfTimeMin = equationOfTime(yearAngleDeg);
+    float trueSolarMin      = meanLocalMin + equationOfTimeMin;
 
-    float delta   = Deklination(d);
-    alpha         = Azimut(d, Breite, Min_WOZ);
-    float beta    = StundenWinkel(Min_WOZ);
-    gamma         = HoehenWinkel(beta, Breite, delta);
+    float declinationDeg    = declination(dayNumber);
+    azimuthDeg              = azimuth(dayNumber, latitudeDeg, trueSolarMin);
+    float hourAngleDeg      = hourAngle(trueSolarMin);
+    elevationDeg            = elevation(hourAngleDeg, latitudeDeg, declinationDeg);
 }

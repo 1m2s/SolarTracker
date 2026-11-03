@@ -4,8 +4,8 @@
  *
  * The switch on PIN_MODE picks the mode. In AUTO the Nano reads the RTC every
  * AUTO_INTERVAL_MS and computes the sun position (AusgabeSonnenstand.m in C++).
- * In MATLAB mode it takes "alpha gamma" lines from USB. Both modes send the
- * two target bytes to the right Nano over I2C. loop() never blocks.
+ * In MATLAB mode it takes "azimuth elevation" lines from USB. Both modes send
+ * the two target bytes to the right Nano over I2C. loop() never blocks.
  *
  * Target: Arduino Nano (ATmega328P), Arduino framework (PlatformIO atmelavr). Level: L2.
  *
@@ -72,8 +72,8 @@ static ClockWatch clockWatch = {false, 0uL, 0uL};
  *
  * Same as writeRegister(slave, reg, value, 'uint8') in MATLAB.
  *
- * @param[in] reg    Register, REG_ALPHA or REG_GAMMA.
- * @param[in] value  Byte to write, 0..255.
+ * @param[in] registerAddr  Register, REG_AZIMUTH or REG_ELEVATION.
+ * @param[in] value         Byte to write, 0..255.
  *
  * @return Code of Wire.endTransmission(): 0 = OK (ACK), 1 = data too long,
  *         2 = no answer (address NACK), 3 = data NACK, 4 = other error,
@@ -81,7 +81,7 @@ static ClockWatch clockWatch = {false, 0uL, 0uL};
  *
  * @note Blocks at most WIRE_TIMEOUT_US.
  */
-static uint8_t writeRegister(uint8_t reg, uint8_t value);
+static uint8_t writeRegister(uint8_t registerAddr, uint8_t value);
 
 /**
  * @brief Send a target to the right Nano and print it
@@ -89,13 +89,13 @@ static uint8_t writeRegister(uint8_t reg, uint8_t value);
  * Turns the angles into the two bytes (or the park bytes at night), prints
  * "  a=..  g=..  a8=..  g8=..  [PARK]  ack=../.." and ends the line.
  *
- * @param[in] a  Azimuth alpha, deg.
- * @param[in] g  Elevation gamma, deg.
+ * @param[in] azimuthDeg    Azimuth, deg.
+ * @param[in] elevationDeg  Elevation, deg.
  *
  * @return true if the right Nano answered OK to both bytes, or SEND_I2C is
  *         false. false if one of the two transfers failed.
  */
-static bool sendTarget(float a, float g);
+static bool sendTarget(float azimuthDeg, float elevationDeg);
 
 /**
  * @brief Print the current mode on Serial
@@ -150,37 +150,37 @@ static void readSerial(uint32_t now);
 /******************************************************************************
  Function Definitions
 ******************************************************************************/
-static uint8_t writeRegister(uint8_t reg, uint8_t value)
+static uint8_t writeRegister(uint8_t registerAddr, uint8_t value)
 {
     Wire.beginTransmission(SLAVE_ADDR);
-    Wire.write(reg);
+    Wire.write(registerAddr);
     Wire.write(value);
     return Wire.endTransmission();
 }
 
-static bool sendTarget(float a, float g)
+static bool sendTarget(float azimuthDeg, float elevationDeg)
 {
-    uint8_t a8 = 0u;
-    uint8_t g8 = 0u;
-    bool parked = targetBytes(a, g, a8, g8);
+    uint8_t azimuthByte   = 0u;
+    uint8_t elevationByte = 0u;
+    bool parked = targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte);
 
-    Serial.print(F("  a="));  Serial.print(a, 4);
-    Serial.print(F("  g="));  Serial.print(g, 4);
-    Serial.print(F("  a8=")); Serial.print(a8);
-    Serial.print(F("  g8=")); Serial.print(g8);
+    Serial.print(F("  a="));  Serial.print(azimuthDeg, 4);
+    Serial.print(F("  g="));  Serial.print(elevationDeg, 4);
+    Serial.print(F("  a8=")); Serial.print(azimuthByte);
+    Serial.print(F("  g8=")); Serial.print(elevationByte);
     if (parked) {
         Serial.print(F("  PARK"));
     }
 
     bool ackOk = true;
     if (SEND_I2C) {
-        uint8_t ackA = writeRegister(REG_ALPHA, a8);
-        uint8_t ackG = writeRegister(REG_GAMMA, g8);
+        uint8_t ackAzimuth   = writeRegister(REG_AZIMUTH, azimuthByte);
+        uint8_t ackElevation = writeRegister(REG_ELEVATION, elevationByte);
         Serial.print(F("  ack="));
-        Serial.print(ackA);
+        Serial.print(ackAzimuth);
         Serial.print('/');
-        Serial.print(ackG);
-        ackOk = (ackA == 0 && ackG == 0);
+        Serial.print(ackElevation);
+        ackOk = (ackAzimuth == 0 && ackElevation == 0);
     }
     Serial.println();
     return ackOk;
@@ -206,15 +206,15 @@ static void flushInput(void)
 
 static bool updateMode(uint32_t now)
 {
-    bool raw = digitalRead(PIN_MODE);
-    if (raw != lastRaw) {
-        lastRaw  = raw;
+    bool switchRaw = digitalRead(PIN_MODE);
+    if (switchRaw != lastRaw) {
+        lastRaw  = switchRaw;
         rawSince = now;
         return false;
     }
-    Mode m = raw ? MODE_AUTO : MODE_MATLAB;
-    if (m != mode && isDue(now, rawSince, DEBOUNCE_MS)) {
-        mode = m;
+    Mode newMode = switchRaw ? MODE_AUTO : MODE_MATLAB;
+    if (newMode != mode && isDue(now, rawSince, DEBOUNCE_MS)) {
+        mode = newMode;
         return true;
     }
     return false;
@@ -232,36 +232,38 @@ static void autoCycle(uint32_t now)
         return;
     }
 
-    RtcDateTime t = Rtc.GetDateTime();
+    RtcDateTime rtcTime = Rtc.GetDateTime();
 
-    if (!t.IsValid() || t.Year() < RTC_YEAR_MIN) {
+    if (!rtcTime.IsValid() || rtcTime.Year() < RTC_YEAR_MIN) {
         Serial.println(F("AUTO    RTC not valid -> nothing sent"));
         error = true;
         return;
     }
 
     /* A valid time that does not move means a dead crystal. */
-    if (clockFrozen(clockWatch, now, t.TotalSeconds())) {
+    if (clockFrozen(clockWatch, now, rtcTime.TotalSeconds())) {
         Serial.println(F("AUTO    RTC frozen -> nothing sent"));
         error = true;
         return;
     }
 
-    float a = 0.0f;
-    float g = 0.0f;
-    SonnenStand(BREITE_DEG, LAENGE_DEG, t.Day(), t.Month(), t.Hour(), t.Minute(), CLOCK_TF, a, g);
+    float azimuthDeg   = 0.0f;
+    float elevationDeg = 0.0f;
+    sunPosition(LATITUDE_DEG, LONGITUDE_DEG, rtcTime.Day(), rtcTime.Month(),
+                rtcTime.Hour(), rtcTime.Minute(), SUMMER_TIME_FLAG, azimuthDeg, elevationDeg);
 
-    char buf[TIME_TEXT_LEN];
-    int n = snprintf(buf, sizeof(buf), "%04u-%02u-%02u %02u:%02u:%02u",
-                     t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second());
+    char timeText[TIME_TEXT_LEN];
+    int printedLength = snprintf(timeText, sizeof(timeText), "%04u-%02u-%02u %02u:%02u:%02u",
+                                 rtcTime.Year(), rtcTime.Month(), rtcTime.Day(),
+                                 rtcTime.Hour(), rtcTime.Minute(), rtcTime.Second());
     Serial.print(F("AUTO    "));
-    if ((n > 0) && ((size_t)n < sizeof(buf))) {
-        Serial.print(buf);
+    if ((printedLength > 0) && ((size_t)printedLength < sizeof(timeText))) {
+        Serial.print(timeText);
     } else {
         Serial.print(F("(time?)"));
     }
 
-    error = !sendTarget(a, g);
+    error = !sendTarget(azimuthDeg, elevationDeg);
 }
 
 static void handleLine(uint32_t now)
@@ -271,15 +273,15 @@ static void handleLine(uint32_t now)
         return;
     }
 
-    float a = 0.0f;
-    float g = 0.0f;
-    if (!parseAngles(reader.buf, a, g)) {
+    float azimuthDeg   = 0.0f;
+    float elevationDeg = 0.0f;
+    if (!parseAngles(reader.buf, azimuthDeg, elevationDeg)) {
         Serial.println(F("MATLAB  bad line -> ignored"));
         return;
     }
 
     Serial.print(F("MATLAB"));
-    error      = !sendTarget(a, g);
+    error      = !sendTarget(azimuthDeg, elevationDeg);
     lastMatlab = now;
     timedOut   = false;
 }
@@ -287,11 +289,11 @@ static void handleLine(uint32_t now)
 static void readSerial(uint32_t now)
 {
     while (Serial.available() > 0) {
-        char c = (char)Serial.read();
-        LineStatus st = lineFeed(reader, c);
-        if (st == LINE_READY) {
+        char received = (char)Serial.read();
+        LineStatus lineStatus = lineFeed(reader, received);
+        if (lineStatus == LINE_READY) {
             handleLine(now);
-        } else if (st == LINE_TOO_LONG) {
+        } else if (lineStatus == LINE_TOO_LONG) {
             Serial.println(F("line too long -> ignored"));
         }
     }

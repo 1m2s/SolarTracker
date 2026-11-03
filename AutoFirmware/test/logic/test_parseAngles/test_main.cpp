@@ -1,7 +1,7 @@
 #include <unity.h>
 #include "MatlabLink.h"
  
-// parseAngles reads "alpha gamma" from MATLAB.
+// parseAngles reads "azimuth elevation" from MATLAB.
 // OK line -> true + values. Broken line -> false, values unchanged.
  
 const float TOL = 0.0001f;
@@ -9,8 +9,8 @@ const float TOL = 0.0001f;
 // Helper: parse a line we expect to be broken
 static bool parseOnly(const char *line)
 {
-    float a = 0.0f, g = 0.0f;
-    return parseAngles(line, a, g);
+    float azimuthDeg = 0.0f, elevationDeg = 0.0f;
+    return parseAngles(line, azimuthDeg, elevationDeg);
 }
  
 void setUp(void) {}
@@ -18,49 +18,49 @@ void tearDown(void) {}
  
 void test_valid_line(void)
 {
-    float a = 0.0f, g = 0.0f;
-    TEST_ASSERT_TRUE(parseAngles("245.41 3.86", a, g));
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 245.41f, a);
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 3.86f, g);
+    float azimuthDeg = 0.0f, elevationDeg = 0.0f;
+    TEST_ASSERT_TRUE(parseAngles("245.41 3.86", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 245.41f, azimuthDeg);
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 3.86f, elevationDeg);
 }
  
 void test_integers(void)
 {
-    float a = 0.0f, g = 0.0f;
-    TEST_ASSERT_TRUE(parseAngles("180 0", a, g));
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 180.0f, a);
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 0.0f, g);
+    float azimuthDeg = 0.0f, elevationDeg = 0.0f;
+    TEST_ASSERT_TRUE(parseAngles("180 0", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 180.0f, azimuthDeg);
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 0.0f, elevationDeg);
 }
  
 // Night: sun below the horizon. Valid line, targetBytes parks it later.
 void test_night_is_valid(void)
 {
-    float a = 0.0f, g = 0.0f;
-    TEST_ASSERT_TRUE(parseAngles("250.1 -5.2", a, g));
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 250.1f, a);
-    TEST_ASSERT_FLOAT_WITHIN(TOL, -5.2f, g);
+    float azimuthDeg = 0.0f, elevationDeg = 0.0f;
+    TEST_ASSERT_TRUE(parseAngles("250.1 -5.2", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 250.1f, azimuthDeg);
+    TEST_ASSERT_FLOAT_WITHIN(TOL, -5.2f, elevationDeg);
 }
  
 void test_edges_are_valid(void)
 {
-    float a = 1.0f, g = 1.0f;
-    TEST_ASSERT_TRUE(parseAngles("0 -90", a, g));
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 0.0f, a);
-    TEST_ASSERT_FLOAT_WITHIN(TOL, -90.0f, g);
-    TEST_ASSERT_TRUE(parseAngles("360 90", a, g));
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 360.0f, a);
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 90.0f, g);
+    float azimuthDeg = 1.0f, elevationDeg = 1.0f;
+    TEST_ASSERT_TRUE(parseAngles("0 -90", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 0.0f, azimuthDeg);
+    TEST_ASSERT_FLOAT_WITHIN(TOL, -90.0f, elevationDeg);
+    TEST_ASSERT_TRUE(parseAngles("360 90", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 360.0f, azimuthDeg);
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 90.0f, elevationDeg);
 }
  
 void test_whitespace_ok(void)
 {
-    float a = 0.0f, g = 0.0f;
-    TEST_ASSERT_TRUE(parseAngles("245.41 3.86\r", a, g));        // Windows line end
-    TEST_ASSERT_TRUE(parseAngles("245.41 3.86\n", a, g));        // newline left in
-    TEST_ASSERT_TRUE(parseAngles("  245.41   3.86  ", a, g));    // extra spaces
-    TEST_ASSERT_TRUE(parseAngles("245.41\t3.86", a, g));         // tab
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 245.41f, a);
-    TEST_ASSERT_FLOAT_WITHIN(TOL, 3.86f, g);
+    float azimuthDeg = 0.0f, elevationDeg = 0.0f;
+    TEST_ASSERT_TRUE(parseAngles("245.41 3.86\r", azimuthDeg, elevationDeg));        // Windows line end
+    TEST_ASSERT_TRUE(parseAngles("245.41 3.86\n", azimuthDeg, elevationDeg));        // newline left in
+    TEST_ASSERT_TRUE(parseAngles("  245.41   3.86  ", azimuthDeg, elevationDeg));    // extra spaces
+    TEST_ASSERT_TRUE(parseAngles("245.41\t3.86", azimuthDeg, elevationDeg));         // tab
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 245.41f, azimuthDeg);
+    TEST_ASSERT_FLOAT_WITHIN(TOL, 3.86f, elevationDeg);
 }
  
 void test_garbage(void)
@@ -82,10 +82,10 @@ void test_half_line(void)
  
 void test_out_of_range(void)
 {
-    TEST_ASSERT_FALSE(parseOnly("400 10"));         // alpha > 360
-    TEST_ASSERT_FALSE(parseOnly("-1 10"));          // alpha < 0
-    TEST_ASSERT_FALSE(parseOnly("245 95"));         // gamma > 90
-    TEST_ASSERT_FALSE(parseOnly("245 -91"));        // gamma < -90
+    TEST_ASSERT_FALSE(parseOnly("400 10"));         // azimuth > 360
+    TEST_ASSERT_FALSE(parseOnly("-1 10"));          // azimuth < 0
+    TEST_ASSERT_FALSE(parseOnly("245 95"));         // elevation > 90
+    TEST_ASSERT_FALSE(parseOnly("245 -91"));        // elevation < -90
     TEST_ASSERT_FALSE(parseOnly("nan 3"));
     TEST_ASSERT_FALSE(parseOnly("inf 3"));
 }
@@ -93,12 +93,12 @@ void test_out_of_range(void)
 // A broken line must not change the old values
 void test_no_change_on_error(void)
 {
-    float a = 1.0f, g = 2.0f;
-    TEST_ASSERT_FALSE(parseAngles("hello", a, g));
-    TEST_ASSERT_FALSE(parseAngles("400 10", a, g));
-    TEST_ASSERT_FALSE(parseAngles("245.41", a, g));
-    TEST_ASSERT_EQUAL_FLOAT(1.0f, a);
-    TEST_ASSERT_EQUAL_FLOAT(2.0f, g);
+    float azimuthDeg = 1.0f, elevationDeg = 2.0f;
+    TEST_ASSERT_FALSE(parseAngles("hello", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FALSE(parseAngles("400 10", azimuthDeg, elevationDeg));
+    TEST_ASSERT_FALSE(parseAngles("245.41", azimuthDeg, elevationDeg));
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, azimuthDeg);
+    TEST_ASSERT_EQUAL_FLOAT(2.0f, elevationDeg);
 }
  
 int runAllTests(void)

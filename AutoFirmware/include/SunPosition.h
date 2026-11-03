@@ -28,23 +28,24 @@
  *
  * From MATLAB: SonnenStand.m
  *
- * @param[in]  Breite  Latitude, deg North (47.81 for Weingarten).
- * @param[in]  Laenge  Longitude, deg East (9.66 for Weingarten).
- * @param[in]  Tag     Day of the month, 1..31.
- * @param[in]  Monat   Month, 1..12.
- * @param[in]  Stunde  Hour of the clock, 0..23.
- * @param[in]  Minute  Minute of the clock, 0..59.
- * @param[in]  tf      0 = the clock shows MEZ (winter time), 1 = summer time.
- * @param[out] alpha   Azimuth, deg, 0..360 (180 = South), or NAN when the
- *                     sun is straight overhead. Always written.
- * @param[out] gamma   Elevation, deg, -90..90, negative at night.
- *                     Always written.
+ * @param[in]  latitudeDeg     Latitude, deg North (47.81 for Weingarten).
+ * @param[in]  longitudeDeg    Longitude, deg East (9.66 for Weingarten).
+ * @param[in]  day             Day of the month, 1..31.
+ * @param[in]  month           Month, 1..12.
+ * @param[in]  hour            Hour of the clock, 0..23.
+ * @param[in]  minute          Minute of the clock, 0..59.
+ * @param[in]  summerTimeFlag  0 = the clock shows CET (winter time),
+ *                             1 = summer time.
+ * @param[out] azimuthDeg      Azimuth, deg, 0..360 (180 = South), or NAN when
+ *                             the sun is straight overhead. Always written.
+ * @param[out] elevationDeg    Elevation, deg, -90..90, negative at night.
+ *                             Always written.
  *
- * @note The order is Tag, Monat here, but Monat, Tag in JahresTag (same as
+ * @note The order is day, month here, but month, day in dayOfYear (same as
  *       MATLAB).
  */
-void SonnenStand(float Breite, float Laenge, int Tag, int Monat,
-                 int Stunde, int Minute, int tf,
-                 float &alpha, float &gamma);
+void sunPosition(float latitudeDeg, float longitudeDeg, int day, int month,
+                 int hour, int minute, int summerTimeFlag,
+                 float &azimuthDeg, float &elevationDeg);
 
 #endif /* SUNPOSITION_H */

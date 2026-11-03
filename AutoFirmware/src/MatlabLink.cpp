@@ -17,10 +17,10 @@
  Constants
 ******************************************************************************/
 /* Possible angles, deg. Anything outside is broken data. */
-static const float ALPHA_MIN = 0.0f;
-static const float ALPHA_MAX = 360.0f;
-static const float GAMMA_MIN = -90.0f;
-static const float GAMMA_MAX = 90.0f;
+static const float AZIMUTH_MIN_DEG   = 0.0f;
+static const float AZIMUTH_MAX_DEG   = 360.0f;
+static const float ELEVATION_MIN_DEG = -90.0f;
+static const float ELEVATION_MAX_DEG = 90.0f;
 
 /******************************************************************************
  Private Function Declarations
@@ -28,91 +28,91 @@ static const float GAMMA_MAX = 90.0f;
 /**
  * @brief Check if a character is a blank
  *
- * @param[in] c  Character to check.
+ * @param[in] character  Character to check.
  *
  * @return true for space, tab, '\r' and '\n', false otherwise.
  */
-static bool isBlank(char c);
+static bool isBlank(char character);
 
 /******************************************************************************
  Function Definitions
 ******************************************************************************/
-LineStatus lineFeed(LineReader &r, char c)
+LineStatus lineFeed(LineReader &reader, char character)
 {
-    if (c == '\r') {
+    if (character == '\r') {
         return LINE_NONE;
     }
 
-    if (c == '\n') {
-        if (r.tooLong) {
-            lineClear(r);
+    if (character == '\n') {
+        if (reader.tooLong) {
+            lineClear(reader);
             return LINE_TOO_LONG;
         }
-        if (r.len == 0) {
+        if (reader.len == 0) {
             return LINE_NONE;
         }
-        r.buf[r.len] = '\0';
-        r.len = 0;
+        reader.buf[reader.len] = '\0';
+        reader.len = 0;
         return LINE_READY;
     }
 
     /* B3: never write past buf; remember the overflow and wait for '\n'. */
-    if (r.len < LINE_LEN_MAX) {
-        r.buf[r.len] = c;
-        r.len++;
+    if (reader.len < LINE_LEN_MAX) {
+        reader.buf[reader.len] = character;
+        reader.len++;
     } else {
-        r.tooLong = true;
+        reader.tooLong = true;
     }
     return LINE_NONE;
 }
 
-void lineClear(LineReader &r)
+void lineClear(LineReader &reader)
 {
-    r.len     = 0;
-    r.tooLong = false;
-    r.buf[0]  = '\0';
+    reader.len     = 0;
+    reader.tooLong = false;
+    reader.buf[0]  = '\0';
 }
 
-static bool isBlank(char c)
+static bool isBlank(char character)
 {
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+    return character == ' ' || character == '\t' || character == '\r' || character == '\n';
 }
 
-bool parseAngles(const char *line, float &alpha, float &gamma)
+bool parseAngles(const char *line, float &azimuthDeg, float &elevationDeg)
 {
-    char *end;
+    char *parseEnd;
 
-    float a = (float)strtod(line, &end);
-    if (end == line) {
+    float parsedAzimuthDeg = (float)strtod(line, &parseEnd);
+    if (parseEnd == line) {
         return false;
     }
     /* A blank must follow, or "245.413.86" would be read as 245.413 and 0.86. */
-    if (!isBlank(*end)) {
+    if (!isBlank(*parseEnd)) {
         return false;
     }
 
-    const char *p = end;
-    float g = (float)strtod(p, &end);
-    if (end == p) {
+    const char *secondStart = parseEnd;
+    float parsedElevationDeg = (float)strtod(secondStart, &parseEnd);
+    if (parseEnd == secondStart) {
         return false;
     }
 
-    while (isBlank(*end)) {
-        end++;
+    while (isBlank(*parseEnd)) {
+        parseEnd++;
     }
-    if (*end != '\0') {
+    if (*parseEnd != '\0') {
         return false;
     }
 
     /* Written as !(in range) so that NaN is rejected too. */
-    if (!(a >= ALPHA_MIN && a <= ALPHA_MAX)) {
+    if (!(parsedAzimuthDeg >= AZIMUTH_MIN_DEG && parsedAzimuthDeg <= AZIMUTH_MAX_DEG)) {
         return false;
     }
-    if (!(g >= GAMMA_MIN && g <= GAMMA_MAX)) {
+    if (!(parsedElevationDeg >= ELEVATION_MIN_DEG && parsedElevationDeg <= ELEVATION_MAX_DEG)) {
         return false;
     }
 
-    alpha = a;
-    gamma = g;
+    azimuthDeg   = parsedAzimuthDeg;
+    elevationDeg = parsedElevationDeg;
     return true;
 }

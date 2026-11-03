@@ -24,12 +24,12 @@
 /**
  * @brief Last RTC reading, to see if the clock still moves
  *
- * Start with: ClockWatch w = {false, 0, 0};
+ * Start with: ClockWatch watch = {false, 0, 0};
  */
 struct ClockWatch {
-    bool     have;    /**< true = a reading is stored */
-    uint32_t secs;    /**< That RTC time, s since 2000-01-01 (RtcDateTime::TotalSeconds) */
-    uint32_t ms;      /**< millis() when this RTC time was first seen */
+    bool     hasReading;     /**< true = a reading is stored */
+    uint32_t rtcSeconds;     /**< That RTC time, s since 2000-01-01 (RtcDateTime::TotalSeconds) */
+    uint32_t firstSeenMs;    /**< millis() when this RTC time was first seen */
 };
 
 /******************************************************************************
@@ -53,15 +53,15 @@ bool isDue(uint32_t now, uint32_t last, uint32_t interval);
  * @brief Check if the RTC time has stopped moving
  *
  * Call once per AUTO cycle with the RTC time just read. Stores the reading
- * in w whenever it is new.
+ * in watch whenever it is new.
  *
- * @param[in,out] w        Last reading. Updated when the RTC time changed.
- * @param[in]     nowMs    millis() now.
- * @param[in]     rtcSecs  RTC time just read, s since 2000-01-01.
+ * @param[in,out] watch       Last reading. Updated when the RTC time changed.
+ * @param[in]     nowMs       millis() now.
+ * @param[in]     rtcSeconds  RTC time just read, s since 2000-01-01.
  *
  * @return true if the RTC time has not changed for at least 2000 ms,
  *         false on the first call and whenever the time moved.
  */
-bool clockFrozen(ClockWatch &w, uint32_t nowMs, uint32_t rtcSecs);
+bool clockFrozen(ClockWatch &watch, uint32_t nowMs, uint32_t rtcSeconds);
 
 #endif /* TIMECHECKS_H */
