@@ -1,5 +1,5 @@
 #include <unity.h>
-#include "parseAngles.h"
+#include "MatlabLink.h"
  
 // parseAngles reads "alpha gamma" from MATLAB.
 // OK line -> true + values. Broken line -> false, values unchanged.

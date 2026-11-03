@@ -23,8 +23,7 @@
 #include "MotorTarget.h"
 #include "LedPattern.h"
 #include "TimeChecks.h"
-#include "LineReader.h"
-#include "parseAngles.h"
+#include "MatlabLink.h"
 
 /******************************************************************************
  Constants

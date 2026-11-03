@@ -1,7 +1,6 @@
 #include <unity.h>
 #include <string.h>
-#include "LineReader.h"
-#include "parseAngles.h"
+#include "MatlabLink.h"
  
 // LineReader collects characters until '\n'.
 // '\r' is skipped, empty lines are ignored, too long lines are thrown away.
