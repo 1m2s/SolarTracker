@@ -1,6 +1,6 @@
 #include <math.h>
 #include "Deklination.h"
-#include "grad2rad.h"
+#include "AngleConversion.h"
 
 // From MATLAB: delta = 0.3948-23.2559*cos(a1)-0.391*cos(a2)-0.1764*cos(a3);
 float Deklination(int d)

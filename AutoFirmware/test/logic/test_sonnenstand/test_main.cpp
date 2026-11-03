@@ -1,12 +1,7 @@
 #include <unity.h>
 #include <math.h>
-#include "grad2rad.h"
-#include "rad2grad.h"
-#include "JahresTag.h"
-#include "MEZ.h"
-#include "MOZ.h"
-#include "StundenWinkel.h"
-#include "Zeitgleichung.h"
+#include "AngleConversion.h"
+#include "SolarTime.h"
 #include "Deklination.h"
 #include "HoehenWinkel.h"
 #include "Azimut.h"

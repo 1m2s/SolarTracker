@@ -1,11 +1,7 @@
 #include "SonnenStand.h"
-#include "MEZ.h"
-#include "MOZ.h"
-#include "JahresTag.h"
-#include "Zeitgleichung.h"
+#include "SolarTime.h"
 #include "Deklination.h"
 #include "Azimut.h"
-#include "StundenWinkel.h"
 #include "HoehenWinkel.h"
 
 // From MATLAB: [alpha,gamma] = SonnenStand(Breite,Laenge,Tag,Monat,Stunde,Minute,tf)

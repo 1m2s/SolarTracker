@@ -1,7 +1,6 @@
 #include <math.h>
 #include "HoehenWinkel.h"
-#include "grad2rad.h"
-#include "rad2grad.h"
+#include "AngleConversion.h"
 
 // From MATLAB: gamma = asin(cos(beta_r)*cos(phi_r)*cos(delta_r)+sin(phi_r)*sin(delta_r));
 float HoehenWinkel(float beta, float phi, float delta)

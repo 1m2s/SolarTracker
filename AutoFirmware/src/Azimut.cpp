@@ -1,8 +1,7 @@
 #include <math.h>
 #include "Azimut.h"
-#include "grad2rad.h"
-#include "rad2grad.h"
-#include "StundenWinkel.h"
+#include "AngleConversion.h"
+#include "SolarTime.h"
 #include "Deklination.h"
 
 // Smallest divisor we accept. Below it the sun is within about 0.06 deg
