@@ -37,7 +37,7 @@ static float clamp1(float x)
     if (x < -1.0f) {
         return -1.0f;
     }
-    if (x != x) {            // NaN: only true for NaN
+    if (!(x >= -1.0f)) {     // NaN: every compare with NaN is false
         return 0.0f;
     }
     return x;

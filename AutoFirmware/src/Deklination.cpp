@@ -6,7 +6,7 @@
 float Deklination(int d)
 {
     // Abweichung zwischen Magnetfeld und Geographie (original comment, see Notes)
-    float Js    = 360.0f * d / 365.0f;     // Umrechnung des Tages in Laufvariable (in Grad)
+    float Js    = 360.0f * (float)d / 365.0f;   // Umrechnung des Tages in Laufvariable (in Grad)
     float a1    = grad2rad(Js + 9.1f);
     float a2    = grad2rad(2.0f * Js + 5.4f);
     float a3    = grad2rad(3.0f * Js + 26.0f);
@@ -20,5 +20,6 @@ float Deklination(int d)
  * - The original comment about "Magnetfeld" is wrong.
  *   This is the sun's declination, not magnetic.
  * - The original says Js is in rad. It is in degrees.
- * - 360.0f first, so d is turned into a float. No integer division.
+ * - (float)d: d is 1..365, exact in a float. The cast only says so
+ *   (the compiler warns about int -> float otherwise).
  */

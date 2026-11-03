@@ -14,10 +14,10 @@ void SonnenStand(float Breite, float Laenge, int Tag, int Monat,
                  float &alpha, float &gamma)
 {
     int   Min_MEZ = MEZ(Stunde, Minute, tf);
-    float Min_MOZ = MOZ(Min_MEZ, Laenge);
+    float Min_MOZ = MOZ((float)Min_MEZ, Laenge);
 
     int   d       = JahresTag(Monat, Tag);
-    float Jg      = d / 365.0f * 360.0f;
+    float Jg      = (float)d / 365.0f * 360.0f;
     float zgl     = Zeitgleichung(Jg);
     float Min_WOZ = Min_MOZ + zgl;
 
@@ -32,5 +32,7 @@ void SonnenStand(float Breite, float Laenge, int Tag, int Monat,
  *   in with & and the function fills them.
  * - alpha = compass direction (180 = South), gamma = height above horizon.
  * - 365.0f, not 365. d is an int, so d/365 would be 0.
+ * - (float) casts: d (1..365) and Min_MEZ (-60..1439) are exact in a
+ *   float, so nothing is lost. The cast only says so (compiler warning).
  * - Careful: Tag/Monat order here, but JahresTag takes Monat/Tag.
  */
