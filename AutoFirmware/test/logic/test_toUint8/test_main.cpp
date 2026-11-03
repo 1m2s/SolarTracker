@@ -1,6 +1,6 @@
 #include <unity.h>
 #include <math.h>
-#include "toUint8.h"
+#include "MotorTarget.h"
 
 // Expected values = what MATLAB uint8() gives.
 // Check in MATLAB:

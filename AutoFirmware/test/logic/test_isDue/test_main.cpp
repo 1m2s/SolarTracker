@@ -1,6 +1,6 @@
 #include <unity.h>
 #include <stdint.h>
-#include "isDue.h"
+#include "TimeChecks.h"
 
 // isDue(now, last, interval) = at least "interval" ms since "last"?
 // Same 30 s interval as main.cpp.

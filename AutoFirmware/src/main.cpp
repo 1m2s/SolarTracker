@@ -20,12 +20,11 @@
 #include "config/Board.h"
 #include "config/Settings.h"
 #include "SunPosition.h"
-#include "targetBytes.h"
+#include "MotorTarget.h"
 #include "LedPattern.h"
-#include "isDue.h"
+#include "TimeChecks.h"
 #include "LineReader.h"
 #include "parseAngles.h"
-#include "ClockWatch.h"
 
 /******************************************************************************
  Constants

@@ -1,7 +1,7 @@
 #include <unity.h>
 #include <math.h>
 #include "SunPosition.h"
-#include "targetBytes.h"
+#include "MotorTarget.h"
 
 // Day: same bytes as MATLAB (a8 = uint8(alpha/2), g8 = uint8(gamma)).
 // Night or unsafe: park at a8 = 90 (180 deg, south), g8 = 0 (vertical).

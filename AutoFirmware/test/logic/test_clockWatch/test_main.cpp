@@ -1,6 +1,6 @@
 #include <unity.h>
 #include <stdint.h>
-#include "ClockWatch.h"
+#include "TimeChecks.h"
 
 // clockFrozen(w, nowMs, rtcSecs): true when the RTC time has not
 // changed for at least 2000 ms of millis().
