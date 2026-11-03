@@ -12,7 +12,7 @@
    MATLAB: no good line for 180 s -> timeout, the panel stays.
    LED on D13: fast blink = error, on = MATLAB, slow blink = AUTO OK.
    The clock is always MEZ (winter time), so tf = 0.
-   ack = answer of the right Nano: 0 = OK, 2 = no answer.
+   ack = answer of the right Nano: 0 = OK, 2 = no answer, 5 = bus timeout.
 */
 
 #include <Arduino.h>
@@ -33,6 +33,7 @@ const uint8_t  SLAVE_ADDR        = 0x19;      // right Nano (A_AIDE)
 const uint32_t INTERVAL_MS       = 30000UL;   // MATLAB: pause(30)
 const uint32_t DEBOUNCE_MS       = 50;        // switch must be still this long
 const uint32_t MATLAB_TIMEOUT_MS = 180000UL;  // 6 missed MATLAB lines (6 x 30 s)
+const uint32_t WIRE_TIMEOUT_US   = 25000UL;   // I2C gives up after 25 ms
 
 // Standort (same as MATLAB)
 const float Breite = 47.81f;
@@ -62,7 +63,7 @@ uint32_t   lastMatlab = 0;           // millis() of the last good MATLAB line
 bool       timedOut   = false;       // MATLAB timeout already reported
 
 // MATLAB: writeRegister(slave, reg, value, 'uint8')
-// Gives back the answer code: 0 = OK (ACK), 2 = no answer
+// Gives back the answer code: 0 = OK (ACK), 2 = no answer, 5 = bus timeout
 uint8_t writeRegister(uint8_t reg, uint8_t value)
 {
     Wire.beginTransmission(SLAVE_ADDR);
@@ -204,6 +205,7 @@ void setup()
     Rtc.Begin();                       // only sets pin modes, writes nothing
     if (SEND_I2C) {
         Wire.begin();                  // Nano is I2C master, 100 kHz like MATLAB
+        Wire.setWireTimeout(WIRE_TIMEOUT_US, true);   // stuck bus: give up, reset TWI
     }
     lineClear(reader);
 
