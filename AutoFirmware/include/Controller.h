@@ -25,6 +25,12 @@
 /******************************************************************************
  Types
 ******************************************************************************/
+/** @brief Who decides where the panel points, picked by the switch on PIN_MODE */
+enum Mode : uint8_t {
+    MODE_AUTO   = 0,    /**< Switch open: the Nano computes the sun position */
+    MODE_MATLAB = 1     /**< Switch to GND: MATLAB sends the angles over USB */
+};
+
 /**
  * @brief State kept between loop() passes
  *
