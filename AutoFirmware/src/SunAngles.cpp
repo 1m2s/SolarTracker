@@ -37,7 +37,10 @@ float declination(int dayNumber)
     float term1Rad       = degToRad(yearAngleDeg + 9.1f);
     float term2Rad       = degToRad(2.0f * yearAngleDeg + 5.4f);
     float term3Rad       = degToRad(3.0f * yearAngleDeg + 26.0f);
-    float declinationDeg = 0.3948f - 23.2559f * cosf(term1Rad) - 0.391f * cosf(term2Rad) - 0.1764f * cosf(term3Rad);
+    float declinationDeg = 0.3948f
+                         - 23.2559f * cosf(term1Rad)
+                         - 0.391f   * cosf(term2Rad)
+                         - 0.1764f  * cosf(term3Rad);
     return declinationDeg;
 }
 
@@ -51,8 +54,9 @@ float elevation(float hourAngleDeg, float latitudeDeg, float declinationDeg)
      * The asinf argument is sin(elevation): at most sin(65.6 deg) = 0.91 in
      * Weingarten, so it stays inside -1..1 there and needs no clamp.
      */
-    float elevationRad   = asinf(cosf(hourAngleRad) * cosf(latitudeRad) * cosf(declinationRad) + sinf(latitudeRad) * sinf(declinationRad));
-    float elevationDeg = radToDeg(elevationRad);
+    float elevationRad   = asinf(cosf(hourAngleRad) * cosf(latitudeRad) * cosf(declinationRad)
+                               + sinf(latitudeRad) * sinf(declinationRad));
+    float elevationDeg   = radToDeg(elevationRad);
     return elevationDeg;
 }
 
@@ -67,7 +71,13 @@ float azimuth(int dayNumber, float latitudeDeg, float trueSolarMin)
     float hourAngleRad   = degToRad(hourAngleDeg);
     float declinationDeg = declination(dayNumber);
     float declinationRad = degToRad(declinationDeg);
-    float elevationRad   = asinf(cosf(hourAngleRad) * cosf(latitudeRad) * cosf(declinationRad) + sinf(latitudeRad) * sinf(declinationRad));
+    /*
+     * Same formula as elevation(), written out again on purpose: Azimut.m
+     * computes its own rgamma, and calling elevation() would add a
+     * rad -> deg -> rad round trip that is not in MATLAB.
+     */
+    float elevationRad   = asinf(cosf(hourAngleRad) * cosf(latitudeRad) * cosf(declinationRad)
+                               + sinf(latitudeRad) * sinf(declinationRad));
 
     float divisor = cosf(elevationRad) * cosf(latitudeRad);
     if (fabsf(divisor) < AZIMUTH_DIVISOR_MIN) {
@@ -80,8 +90,12 @@ float azimuth(int dayNumber, float latitudeDeg, float trueSolarMin)
      * (complex result).
      */
     float cosArgument = (sinf(elevationRad) * sinf(latitudeRad) - sinf(declinationRad)) / divisor;
-    if (cosArgument > 1.0f)  cosArgument = 1.0f;
-    if (cosArgument < -1.0f) cosArgument = -1.0f;
+    if (cosArgument > 1.0f) {
+        cosArgument = 1.0f;
+    }
+    if (cosArgument < -1.0f) {
+        cosArgument = -1.0f;
+    }
 
     float azimuthRad;
     if (trueSolarMin < 12.0f * 60.0f) {
