@@ -9,6 +9,21 @@ enum Mode : uint8_t {
     MODE_MATLAB = 1
 };
 
+enum ImuFault : uint8_t {
+    FAULT_NONE         = 0,
+    FAULT_NO_ANSWER    = 1,
+    FAULT_SWITCH_MOVED = 2
+};
+
+enum StatusResult : uint8_t {
+    RESULT_WAITING   = 0,
+    RESULT_LATCHED   = 1,
+    RESULT_SAME      = 2,
+    RESULT_NO_ANSWER = 3,
+    RESULT_FAULT     = 4,
+    RESULT_IGNORED   = 5
+};
+
 struct Controller {
     Mode     mode;
     bool     error;
@@ -18,6 +33,12 @@ struct Controller {
     uint32_t switchChangedMs;
     uint32_t lastMatlabMs;
     bool     timedOut;
+    bool     imuKnown;
+    bool     imuSwitchOn;
+    ImuFault fault;
+    uint32_t startMs;
+    uint32_t lastStatusMs;
+    bool     askNow;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -33,5 +54,11 @@ void ctrlMatlabLine(Controller &controller, uint32_t nowMs, bool sendOk);
 bool ctrlMatlabTimedOut(Controller &controller, uint32_t nowMs);
 
 bool ctrlLedOn(const Controller &controller, uint32_t nowMs);
+
+bool ctrlStatusDue(Controller &controller, uint32_t nowMs);
+
+StatusResult ctrlStatus(Controller &controller, bool answered, uint8_t status, uint32_t nowMs);
+
+bool ctrlBlocked(const Controller &controller);
 
 #endif

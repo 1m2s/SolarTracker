@@ -1,5 +1,6 @@
 #include <unity.h>
 #include "Controller.h"
+#include "config/Board.h"
 
 static const bool SWITCH_OPEN   = true;
 static const bool SWITCH_CLOSED = false;
@@ -13,6 +14,7 @@ static uint32_t flipSwitch(bool switchOpen, uint32_t startMs);
 void setUp(void)
 {
     ctrlInit(controller, SWITCH_OPEN, 0u);
+    (void)ctrlStatus(controller, true, 0u, 0u);
 }
 
 void tearDown(void) {}
@@ -219,6 +221,127 @@ void test_led_millis_wrap(void)
     TEST_ASSERT_TRUE(ctrlLedOn(controller, 4294967295u));
 }
 
+void test_status_asked_at_once_at_start(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 1000u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 1000u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 1001u));
+}
+
+void test_status_retry_every_250_ms_until_known(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, STATUS_RETRY_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, STATUS_RETRY_MS));
+}
+
+void test_nothing_sent_before_first_answer(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 0u));
+    TEST_ASSERT_FALSE(controller.error);
+}
+
+void test_first_answer_aus_latches_and_auto_runs(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, 0u, 250u));
+    TEST_ASSERT_FALSE(controller.imuSwitchOn);
+    TEST_ASSERT_FALSE(ctrlBlocked(controller));
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, 250u));
+}
+
+void test_first_answer_an_latches_on(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON, 0u));
+    TEST_ASSERT_TRUE(controller.imuSwitchOn);
+}
+
+void test_first_answer_an_while_moving_latches_on(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON | STATUS_MOVING, 0u));
+    TEST_ASSERT_TRUE(controller.imuSwitchOn);
+}
+
+void test_no_answer_waits_then_faults_at_5_s(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_WAITING, ctrlStatus(controller, false, 0u, STARTUP_WAIT_MS - 1u));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, false, 0u, STARTUP_WAIT_MS));
+    TEST_ASSERT_EQUAL(FAULT_NO_ANSWER, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 400u));
+}
+
+void test_after_latch_asked_every_2_s(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, 0u, 0u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, COMPASS_CHECK_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS + 1u));
+}
+
+void test_moving_bit_is_not_a_switch_change(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_SAME, ctrlStatus(controller, true, STATUS_MOVING, 2000u));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+}
+
+void test_switch_moved_faults(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, STATUS_IMU_ON, 2000u));
+    TEST_ASSERT_EQUAL(FAULT_SWITCH_MOVED, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 2000u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 2200u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 2400u));
+}
+
+void test_fault_is_permanent(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, STATUS_IMU_ON, 2000u));
+    ctrlAutoResult(controller, true);
+    (void)flipSwitch(SWITCH_CLOSED, 3000u);
+    ctrlMatlabLine(controller, 4000u, true);
+    TEST_ASSERT_EQUAL(FAULT_SWITCH_MOVED, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 4200u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 100000u));
+    TEST_ASSERT_EQUAL(RESULT_IGNORED, ctrlStatus(controller, true, 0u, 100000u));
+    TEST_ASSERT_EQUAL(FAULT_SWITCH_MOVED, controller.fault);
+}
+
+void test_missed_answer_after_latch_is_not_a_fault(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_NO_ANSWER, ctrlStatus(controller, false, 0u, 2000u));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+    TEST_ASSERT_FALSE(ctrlBlocked(controller));
+}
+
+void test_init_forgets_the_latch(void)
+{
+    TEST_ASSERT_FALSE(ctrlBlocked(controller));
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+}
+
+void test_status_timer_across_millis_wrap(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, NEAR_WRAP_MS);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, NEAR_WRAP_MS));
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, 0u, NEAR_WRAP_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, NEAR_WRAP_MS + COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, NEAR_WRAP_MS + COMPASS_CHECK_MS));
+}
+
 int runAllTests(void)
 {
     UNITY_BEGIN();
@@ -246,6 +369,20 @@ int runAllTests(void)
     RUN_TEST(test_led_error_fast_blink);
     RUN_TEST(test_led_error_wins_over_matlab);
     RUN_TEST(test_led_millis_wrap);
+    RUN_TEST(test_status_asked_at_once_at_start);
+    RUN_TEST(test_status_retry_every_250_ms_until_known);
+    RUN_TEST(test_nothing_sent_before_first_answer);
+    RUN_TEST(test_first_answer_aus_latches_and_auto_runs);
+    RUN_TEST(test_first_answer_an_latches_on);
+    RUN_TEST(test_first_answer_an_while_moving_latches_on);
+    RUN_TEST(test_no_answer_waits_then_faults_at_5_s);
+    RUN_TEST(test_after_latch_asked_every_2_s);
+    RUN_TEST(test_moving_bit_is_not_a_switch_change);
+    RUN_TEST(test_switch_moved_faults);
+    RUN_TEST(test_fault_is_permanent);
+    RUN_TEST(test_missed_answer_after_latch_is_not_a_fault);
+    RUN_TEST(test_init_forgets_the_latch);
+    RUN_TEST(test_status_timer_across_millis_wrap);
     return UNITY_END();
 }
 

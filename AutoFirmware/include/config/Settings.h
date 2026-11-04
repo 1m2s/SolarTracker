@@ -26,6 +26,10 @@ const uint8_t MAG_SAMPLES = 4u;
 
 const uint32_t MAG_WAIT_MS = 10uL;
 
+const uint32_t COMPASS_CHECK_MS = 2000uL;
+const uint32_t STATUS_RETRY_MS  = 250uL;
+const uint32_t STARTUP_WAIT_MS  = 5000uL;
+
 const float RESEND_DEG      = 4.0f;
 const float EDGE_MARGIN_DEG = 10.0f;
 
