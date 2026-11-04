@@ -44,8 +44,8 @@ static uint8_t writeRegister(uint8_t registerAddr, uint8_t value)
 static bool sendTarget(float azimuthDeg, float elevationDeg)
 {
     uint8_t azimuthByte   = 0u;
-    uint8_t elevationByte = 0u;
-    bool parked = targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte);
+    uint8_t elevationByte = 0u;//value intilizatoin
+    bool parked = targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte); //hand over the bytes azm,elev(targetBytes fiils them using the & operator)
 
     Serial.print(F("  az="));     Serial.print(azimuthDeg, 4);
     Serial.print(F("  el="));     Serial.print(elevationDeg, 4);
