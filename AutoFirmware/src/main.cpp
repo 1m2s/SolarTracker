@@ -29,7 +29,13 @@ static ClockWatch clockWatch = {false, 0uL, 0uL};
 
 static uint8_t writeRegister(uint8_t registerAddr, uint8_t value);
 
+static bool writeTarget(uint8_t azimuthByte, uint8_t elevationByte);
+
 static bool sendTarget(float azimuthDeg, float elevationDeg);
+
+static bool sendCorrected(float sunAzimuthDeg, float sunElevationDeg, float arrowDeg, float correctedDeg);
+
+static bool sendSun(uint32_t now, float azimuthDeg, float elevationDeg);
 
 static void printMode(void);
 
@@ -43,7 +49,7 @@ static void readSerial(uint32_t now);
 
 static void printHeading(float headingDeg, bool inError);
 
-static void checkCompass(uint8_t status);
+static void checkCompass(uint32_t now, uint8_t status);
 
 static void askStatus(uint32_t now);
 
@@ -53,6 +59,22 @@ static uint8_t writeRegister(uint8_t registerAddr, uint8_t value)
     Wire.write(registerAddr);
     Wire.write(value);
     return Wire.endTransmission();
+}
+
+static bool writeTarget(uint8_t azimuthByte, uint8_t elevationByte)
+{
+    bool ackOk = true;
+    if (SEND_I2C) {
+        uint8_t ackAzimuth   = writeRegister(REG_AZIMUTH, azimuthByte);
+        uint8_t ackElevation = writeRegister(REG_ELEVATION, elevationByte);
+        Serial.print(F("  ack="));
+        Serial.print(ackAzimuth);
+        Serial.print('/');
+        Serial.print(ackElevation);
+        ackOk = (ackAzimuth == 0u) && (ackElevation == 0u);
+    }
+    Serial.println();
+    return ackOk;
 }
 
 static bool sendTarget(float azimuthDeg, float elevationDeg)
@@ -69,17 +91,49 @@ static bool sendTarget(float azimuthDeg, float elevationDeg)
         Serial.print(F("  PARK"));
     }
 
-    bool ackOk = true;
-    if (SEND_I2C) {
-        uint8_t ackAzimuth   = writeRegister(REG_AZIMUTH, azimuthByte);
-        uint8_t ackElevation = writeRegister(REG_ELEVATION, elevationByte);
-        Serial.print(F("  ack="));
-        Serial.print(ackAzimuth);
-        Serial.print('/');
-        Serial.print(ackElevation);
-        ackOk = (ackAzimuth == 0u) && (ackElevation == 0u);
+    return writeTarget(azimuthByte, elevationByte);
+}
+
+static bool sendCorrected(float sunAzimuthDeg, float sunElevationDeg, float arrowDeg, float correctedDeg)
+{
+    uint8_t azimuthByte   = toUint8(correctedDeg / 2.0f);
+    uint8_t elevationByte = toUint8(sunElevationDeg);
+
+    Serial.print(F("  az="));     Serial.print(sunAzimuthDeg, 4);
+    Serial.print(F("  el="));     Serial.print(sunElevationDeg, 4);
+    Serial.print(F("  arrow="));  Serial.print(arrowDeg, 1);
+    Serial.print(F("  phi="));    Serial.print(correctedDeg, 1);
+    Serial.print(F("  azByte=")); Serial.print(azimuthByte);
+    Serial.print(F("  elByte=")); Serial.print(elevationByte);
+
+    return writeTarget(azimuthByte, elevationByte);
+}
+
+static bool sendSun(uint32_t now, float azimuthDeg, float elevationDeg)
+{
+    if (!controller.imuSwitchOn) {
+        return sendTarget(azimuthDeg, elevationDeg);
     }
-    Serial.println();
+
+    uint8_t azimuthByte   = 0u;
+    uint8_t elevationByte = 0u;
+    bool    parked        = targetBytes(azimuthDeg, elevationDeg, azimuthByte, elevationByte);
+    ctrlSunAngles(controller, azimuthDeg, elevationDeg, parked);
+
+    bool  ackOk   = false;
+    float sentDeg = PARK_AZIMUTH_DEG;
+    if (parked) {
+        ackOk = sendTarget(azimuthDeg, elevationDeg);
+    } else if (!ctrlCompassUsable(controller)) {
+        Serial.print(F("  no heading ->"));
+        ackOk = sendTarget(PARK_AZIMUTH_DEG, PARK_ELEVATION_DEG);
+    } else {
+        float arrowDeg = arrowHeading(controller.headingDeg);
+        sentDeg = edgeRule(controller.lastSentDeg, correctedAzimuth(azimuthDeg, arrowDeg));
+        ackOk   = sendCorrected(azimuthDeg, elevationDeg, arrowDeg, sentDeg);
+    }
+
+    ctrlSendDone(controller, now, sentDeg, ackOk);
     return ackOk;
 }
 
@@ -138,7 +192,7 @@ static void autoCycle(uint32_t now)
         Serial.print(F("(time?)"));
     }
 
-    bool sendOk = sendTarget(azimuthDeg, elevationDeg);
+    bool sendOk = sendSun(now, azimuthDeg, elevationDeg);
     ctrlAutoResult(controller, sendOk);
 }
 
@@ -166,7 +220,7 @@ static void handleLine(uint32_t now)
     }
 
     Serial.print(F("MATLAB"));
-    bool sendOk = sendTarget(azimuthDeg, elevationDeg);
+    bool sendOk = sendSun(now, azimuthDeg, elevationDeg);
     ctrlMatlabLine(controller, now, sendOk);
 }
 
@@ -195,7 +249,7 @@ static void printHeading(float headingDeg, bool inError)
     Serial.println();
 }
 
-static void checkCompass(uint8_t status)
+static void checkCompass(uint32_t now, uint8_t status)
 {
     if (!controller.imuSwitchOn) {
         return;
@@ -223,7 +277,9 @@ static void checkCompass(uint8_t status)
     } else if (result == COMPASS_BAD_IGNORED) {
         Serial.println(F("IMU     bad read (ignored)"));
     } else if (result == COMPASS_FAILED) {
-        Serial.println(F("compass failed"));
+        Serial.print(F("compass failed -> park"));
+        bool ackOk = sendTarget(PARK_AZIMUTH_DEG, PARK_ELEVATION_DEG);
+        ctrlSendDone(controller, now, PARK_AZIMUTH_DEG, ackOk);
     } else if (result == COMPASS_STILL_FAILED) {
         if (readOk) {
             printHeading(headingDeg, true);
@@ -262,7 +318,7 @@ static void askStatus(uint32_t now)
     }
 
     if ((result == RESULT_LATCHED) || (result == RESULT_SAME)) {
-        checkCompass(status);
+        checkCompass(now, status);
     }
 }
 
