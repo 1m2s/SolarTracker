@@ -26,4 +26,7 @@ const uint8_t MAG_SAMPLES = 4u;
 
 const uint32_t MAG_WAIT_MS = 10uL;
 
+const float RESEND_DEG      = 4.0f;
+const float EDGE_MARGIN_DEG = 10.0f;
+
 #endif
