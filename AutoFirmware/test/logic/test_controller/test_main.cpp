@@ -1,4 +1,5 @@
 #include <unity.h>
+#include <math.h>
 #include "Controller.h"
 #include "config/Board.h"
 
@@ -342,6 +343,118 @@ void test_status_timer_across_millis_wrap(void)
     TEST_ASSERT_TRUE(ctrlStatusDue(controller, NEAR_WRAP_MS + COMPASS_CHECK_MS));
 }
 
+static void failCompass(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_FAILED, ctrlCompassRead(controller, false, 0.0f));
+}
+
+void test_no_heading_before_first_good_read(void)
+{
+    TEST_ASSERT_FALSE(controller.hasHeading);
+    TEST_ASSERT_FALSE(ctrlCompassUsable(controller));
+    TEST_ASSERT_FALSE(controller.compassFailed);
+}
+
+void test_good_read_stores_heading(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_TRUE(ctrlCompassUsable(controller));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 72.0f, controller.headingDeg);
+}
+
+void test_one_and_two_bad_reads_are_ignored(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_TRUE(ctrlCompassUsable(controller));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 72.0f, controller.headingDeg);
+}
+
+void test_third_bad_read_fails(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    failCompass();
+    TEST_ASSERT_TRUE(controller.compassFailed);
+    TEST_ASSERT_FALSE(ctrlCompassUsable(controller));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
+}
+
+void test_good_read_resets_bad_count(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_FALSE(controller.compassFailed);
+}
+
+void test_recovery_needs_3_good_reads_in_a_row(void)
+{
+    failCompass();
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_TRUE(ctrlCompassUsable(controller));
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 74.0f));
+}
+
+void test_bad_read_restarts_recovery(void)
+{
+    failCompass();
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 74.0f));
+}
+
+void test_heading_updated_during_error(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    failCompass();
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 80.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 80.0f, controller.headingDeg);
+    TEST_ASSERT_FALSE(ctrlCompassUsable(controller));
+}
+
+void test_out_of_range_heading_counts_as_bad(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, true, NAN));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, true, 360.0f));
+    TEST_ASSERT_EQUAL(COMPASS_FAILED, ctrlCompassRead(controller, true, -1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 72.0f, controller.headingDeg);
+}
+
+void test_init_resets_compass(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    failCompass();
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_FALSE(controller.compassFailed);
+    TEST_ASSERT_FALSE(controller.hasHeading);
+}
+
+void test_compass_counts_do_not_overflow(void)
+{
+    for (uint16_t read = 0u; read < 1000u; read++) {
+        TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    }
+    failCompass();
+    for (uint16_t read = 0u; read < 1000u; read++) {
+        TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, false, 0.0f));
+    }
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 72.0f));
+}
+
 int runAllTests(void)
 {
     UNITY_BEGIN();
@@ -383,6 +496,17 @@ int runAllTests(void)
     RUN_TEST(test_missed_answer_after_latch_is_not_a_fault);
     RUN_TEST(test_init_forgets_the_latch);
     RUN_TEST(test_status_timer_across_millis_wrap);
+    RUN_TEST(test_no_heading_before_first_good_read);
+    RUN_TEST(test_good_read_stores_heading);
+    RUN_TEST(test_one_and_two_bad_reads_are_ignored);
+    RUN_TEST(test_third_bad_read_fails);
+    RUN_TEST(test_good_read_resets_bad_count);
+    RUN_TEST(test_recovery_needs_3_good_reads_in_a_row);
+    RUN_TEST(test_bad_read_restarts_recovery);
+    RUN_TEST(test_heading_updated_during_error);
+    RUN_TEST(test_out_of_range_heading_counts_as_bad);
+    RUN_TEST(test_init_resets_compass);
+    RUN_TEST(test_compass_counts_do_not_overflow);
     return UNITY_END();
 }
 

@@ -24,6 +24,14 @@ enum StatusResult : uint8_t {
     RESULT_IGNORED   = 5
 };
 
+enum CompassResult : uint8_t {
+    COMPASS_OK           = 0,
+    COMPASS_BAD_IGNORED  = 1,
+    COMPASS_FAILED       = 2,
+    COMPASS_STILL_FAILED = 3,
+    COMPASS_RECOVERED    = 4
+};
+
 struct Controller {
     Mode     mode;
     bool     error;
@@ -39,6 +47,11 @@ struct Controller {
     uint32_t startMs;
     uint32_t lastStatusMs;
     bool     askNow;
+    uint8_t  badReads;
+    uint8_t  goodReads;
+    bool     compassFailed;
+    bool     hasHeading;
+    float    headingDeg;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -60,5 +73,9 @@ bool ctrlStatusDue(Controller &controller, uint32_t nowMs);
 StatusResult ctrlStatus(Controller &controller, bool answered, uint8_t status, uint32_t nowMs);
 
 bool ctrlBlocked(const Controller &controller);
+
+CompassResult ctrlCompassRead(Controller &controller, bool readOk, float headingDeg);
+
+bool ctrlCompassUsable(const Controller &controller);
 
 #endif

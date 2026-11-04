@@ -21,6 +21,11 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
     controller.startMs         = nowMs;
     controller.lastStatusMs    = nowMs;
     controller.askNow          = true;
+    controller.badReads        = 0u;
+    controller.goodReads       = 0u;
+    controller.compassFailed   = false;
+    controller.hasHeading      = false;
+    controller.headingDeg      = 0.0f;
 }
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
@@ -90,7 +95,7 @@ bool ctrlMatlabTimedOut(Controller &controller, uint32_t nowMs)
 
 bool ctrlLedOn(const Controller &controller, uint32_t nowMs)
 {
-    if (controller.error || (controller.fault != FAULT_NONE)) {
+    if (controller.error || (controller.fault != FAULT_NONE) || controller.compassFailed) {
         return (nowMs / ERROR_BLINK_MS) % 2u == 0u;
     }
     if (controller.mode == MODE_MATLAB) {
@@ -147,4 +152,44 @@ StatusResult ctrlStatus(Controller &controller, bool answered, uint8_t status, u
 bool ctrlBlocked(const Controller &controller)
 {
     return !controller.imuKnown || (controller.fault != FAULT_NONE);
+}
+
+CompassResult ctrlCompassRead(Controller &controller, bool readOk, float headingDeg)
+{
+    bool goodRead = readOk && (headingDeg >= 0.0f) && (headingDeg < 360.0f);
+
+    if (goodRead) {
+        controller.badReads   = 0u;
+        controller.hasHeading = true;
+        controller.headingDeg = headingDeg;
+        if (controller.goodReads < COMPASS_RECOVER_READS) {
+            controller.goodReads++;
+        }
+        if (!controller.compassFailed) {
+            return COMPASS_OK;
+        }
+        if (controller.goodReads >= COMPASS_RECOVER_READS) {
+            controller.compassFailed = false;
+            return COMPASS_RECOVERED;
+        }
+        return COMPASS_STILL_FAILED;
+    }
+
+    controller.goodReads = 0u;
+    if (controller.badReads < COMPASS_FAIL_READS) {
+        controller.badReads++;
+    }
+    if (controller.compassFailed) {
+        return COMPASS_STILL_FAILED;
+    }
+    if (controller.badReads >= COMPASS_FAIL_READS) {
+        controller.compassFailed = true;
+        return COMPASS_FAILED;
+    }
+    return COMPASS_BAD_IGNORED;
+}
+
+bool ctrlCompassUsable(const Controller &controller)
+{
+    return controller.hasHeading && !controller.compassFailed;
 }
