@@ -9,11 +9,16 @@
 #include "TimeChecks.h"
 #include "Controller.h"
 #include "MatlabLink.h"
+#include "Imu.h"
+#include "Heading.h"
+#include "Correction.h"
 
 static const uint8_t TIME_TEXT_LEN = 20u;
 
 static const float PARK_AZIMUTH_DEG   = 180.0f;
 static const float PARK_ELEVATION_DEG = 0.0f;
+
+static const float ACCEL_COUNTS_PER_G = 16384.0f;
 
 static ThreeWire rtcWire(PIN_RTC_DAT, PIN_RTC_CLK, PIN_RTC_RST);
 static RtcDS1302<ThreeWire> Rtc(rtcWire);
@@ -35,6 +40,10 @@ static void autoCycle(uint32_t now);
 static void handleLine(uint32_t now);
 
 static void readSerial(uint32_t now);
+
+static void printHeading(float headingDeg, bool inError);
+
+static void checkCompass(uint8_t status);
 
 static void askStatus(uint32_t now);
 
@@ -174,6 +183,59 @@ static void readSerial(uint32_t now)
     }
 }
 
+static void printHeading(float headingDeg, bool inError)
+{
+    Serial.print(F("IMU     h="));
+    Serial.print(headingDeg, 1);
+    Serial.print(F("  arrow="));
+    Serial.print(arrowHeading(headingDeg), 1);
+    if (inError) {
+        Serial.print(F("  (error)"));
+    }
+    Serial.println();
+}
+
+static void checkCompass(uint8_t status)
+{
+    if (!controller.imuSwitchOn) {
+        return;
+    }
+    if (!ctrlReadCompass(controller, status)) {
+        Serial.println(F("IMU     motor moving -> skip"));
+        return;
+    }
+
+    ImuRaw raw = {0, 0, 0, 0, 0};
+    float  headingDeg = -1.0f;
+    bool   readOk = imuRead(raw);
+    if (readOk) {
+        float magX = 0.0f;
+        float magY = 0.0f;
+        float magZ = 0.0f;
+        magCalibrated(raw.magX, raw.magY, raw.magZ, magX, magY, magZ);
+        headingDeg = tiltHeading((float)raw.accelX / ACCEL_COUNTS_PER_G,
+                                 (float)raw.accelY / ACCEL_COUNTS_PER_G, magX, magY, magZ);
+    }
+
+    CompassResult result = ctrlCompassRead(controller, readOk, headingDeg);
+    if (result == COMPASS_OK) {
+        printHeading(headingDeg, false);
+    } else if (result == COMPASS_BAD_IGNORED) {
+        Serial.println(F("IMU     bad read (ignored)"));
+    } else if (result == COMPASS_FAILED) {
+        Serial.println(F("compass failed"));
+    } else if (result == COMPASS_STILL_FAILED) {
+        if (readOk) {
+            printHeading(headingDeg, true);
+        } else {
+            Serial.println(F("IMU     bad read (error)"));
+        }
+    } else {
+        printHeading(headingDeg, false);
+        Serial.println(F("compass OK again"));
+    }
+}
+
 static void askStatus(uint32_t now)
 {
     if (!ctrlStatusDue(controller, now)) {
@@ -197,6 +259,10 @@ static void askStatus(uint32_t now)
             Serial.print(F("FAULT "));
             (void)sendTarget(PARK_AZIMUTH_DEG, PARK_ELEVATION_DEG);
         }
+    }
+
+    if ((result == RESULT_LATCHED) || (result == RESULT_SAME)) {
+        checkCompass(status);
     }
 }
 
