@@ -12,6 +12,9 @@
 
 static const uint8_t TIME_TEXT_LEN = 20u;
 
+static const float PARK_AZIMUTH_DEG   = 180.0f;
+static const float PARK_ELEVATION_DEG = 0.0f;
+
 static ThreeWire rtcWire(PIN_RTC_DAT, PIN_RTC_CLK, PIN_RTC_RST);
 static RtcDS1302<ThreeWire> Rtc(rtcWire);
 
@@ -32,6 +35,8 @@ static void autoCycle(uint32_t now);
 static void handleLine(uint32_t now);
 
 static void readSerial(uint32_t now);
+
+static void askStatus(uint32_t now);
 
 static uint8_t writeRegister(uint8_t registerAddr, uint8_t value)
 {
@@ -142,6 +147,15 @@ static void handleLine(uint32_t now)
         return;
     }
 
+    if (ctrlBlocked(controller)) {
+        if (controller.fault == FAULT_NONE) {
+            Serial.println(F("MATLAB  ignored: IMU switch not known yet"));
+        } else {
+            Serial.println(F("MATLAB  ignored: fault -> power-cycle"));
+        }
+        return;
+    }
+
     Serial.print(F("MATLAB"));
     bool sendOk = sendTarget(azimuthDeg, elevationDeg);
     ctrlMatlabLine(controller, now, sendOk);
@@ -156,6 +170,32 @@ static void readSerial(uint32_t now)
             handleLine(now);
         } else if (lineStatus == LINE_TOO_LONG) {
             Serial.println(F("line too long -> ignored"));
+        }
+    }
+}
+
+static void askStatus(uint32_t now)
+{
+    if (!ctrlStatusDue(controller, now)) {
+        return;
+    }
+
+    uint8_t status   = 0u;
+    bool    answered = Wire.requestFrom(SLAVE_ADDR, (uint8_t)1u) == 1u;
+    if (answered) {
+        status = (uint8_t)Wire.read();
+    }
+
+    StatusResult result = ctrlStatus(controller, answered, status, now);
+    if (result == RESULT_LATCHED) {
+        Serial.println(controller.imuSwitchOn ? F("IMU switch AN") : F("IMU switch AUS"));
+    } else if (result == RESULT_FAULT) {
+        if (controller.fault == FAULT_NO_ANSWER) {
+            Serial.println(F("right Nano not answering -> power-cycle"));
+        } else {
+            Serial.println(F("IMU switch moved -> power-cycle"));
+            Serial.print(F("FAULT "));
+            (void)sendTarget(PARK_AZIMUTH_DEG, PARK_ELEVATION_DEG);
         }
     }
 }
@@ -178,6 +218,11 @@ void setup()
     Serial.print(F("Hybrid firmware, SEND_I2C = "));
     Serial.println(SEND_I2C ? F("ON") : F("OFF"));
     printMode();
+
+    if (!SEND_I2C) {
+        (void)ctrlStatus(controller, true, 0u, millis());
+        Serial.println(F("IMU switch AUS (no I2C)"));
+    }
 }
 
 void loop()
@@ -187,6 +232,10 @@ void loop()
     if (ctrlSwitch(controller, digitalRead(PIN_MODE) == HIGH, now)) {
         flushInput();
         printMode();
+    }
+
+    if (SEND_I2C) {
+        askStatus(now);
     }
 
     readSerial(now);
