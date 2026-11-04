@@ -22,4 +22,8 @@ const uint16_t RTC_YEAR_MIN = 2026u;
 
 const bool RTC_SUMMER_TIME = false;
 
+const uint8_t MAG_SAMPLES = 4u;
+
+const uint32_t MAG_WAIT_MS = 10uL;
+
 #endif

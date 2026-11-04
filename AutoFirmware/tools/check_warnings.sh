@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Strict-warning gate for our own code in src/.
-# Any warning counts as an error. main.cpp is skipped (needs Arduino).
+# Any warning counts as an error. main.cpp and Imu.cpp are skipped (need Arduino).
 # Run from AutoFirmware/:   bash tools/check_warnings.sh
 set -u
 
@@ -12,7 +12,7 @@ FLAGS=(-std=gnu++11 -Iinclude -fsyntax-only
 
 status=0
 for f in src/*.cpp; do
-    if [ "$f" = "src/main.cpp" ]; then
+    if [ "$f" = "src/main.cpp" ] || [ "$f" = "src/Imu.cpp" ]; then
         continue
     fi
     if ! "$CXX" "${FLAGS[@]}" "$f"; then

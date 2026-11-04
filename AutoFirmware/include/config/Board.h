@@ -16,6 +16,9 @@ const uint8_t SLAVE_ADDR = 0x19u;
 const uint8_t REG_AZIMUTH   = 254u;
 const uint8_t REG_ELEVATION = 255u;
 
+const uint8_t IMU_ADDR = 0x68u;
+const uint8_t MAG_ADDR = 0x0Cu;
+
 const uint32_t WIRE_TIMEOUT_US = 25000uL;
 
 #endif

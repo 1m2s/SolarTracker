@@ -18,79 +18,22 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <unity.h>
-
-// ---------- MPU-9250 ----------
-const uint8_t MPU_ADDR        = 0x68;
-const uint8_t REG_PWR_MGMT_1  = 0x6B;
-const uint8_t REG_INT_PIN_CFG = 0x37;
-
-// ---------- AK8963 (compass) ----------
-const uint8_t MAG_ADDR  = 0x0C;
-const uint8_t REG_WIA   = 0x00;
-const uint8_t REG_HXL   = 0x03;
-const uint8_t REG_CNTL1 = 0x0A;
+#include <stdio.h>
+#include "Imu.h"
 
 // ---------- settings ----------
 const uint32_t TURN_MS   = 30000;   // 30 s for half a circle
 const uint32_t SAMPLE_MS = 200;     // one CAL line every 0.2 s
-const uint8_t  AVG       = 4;       // 4 readings per line (less noise)
 
 uint16_t samples = 0;
-
-// ---------- small I2C helpers ----------
-bool writeReg(uint8_t dev, uint8_t reg, uint8_t value)
-{
-    Wire.beginTransmission(dev);
-    Wire.write(reg);
-    Wire.write(value);
-    return Wire.endTransmission() == 0;
-}
-
-bool readRegs(uint8_t dev, uint8_t reg, uint8_t count, uint8_t *buf)
-{
-    Wire.beginTransmission(dev);
-    Wire.write(reg);
-    if (Wire.endTransmission() != 0) {
-        return false;
-    }
-    if (Wire.requestFrom(dev, count) != count) {
-        return false;
-    }
-    for (uint8_t i = 0; i < count; i++) {
-        buf[i] = Wire.read();
-    }
-    return true;
-}
-
-// One compass measurement (same steps as test_compass).
-bool readMag(int16_t &mx, int16_t &my, int16_t &mz)
-{
-    uint8_t b[6];
-    if (!writeReg(MAG_ADDR, REG_CNTL1, 0x01)) {
-        return false;
-    }
-    delay(10);
-    if (!readRegs(MAG_ADDR, REG_HXL, 6, b)) {
-        return false;
-    }
-    mx = (int16_t)((b[1] << 8) | b[0]);
-    my = (int16_t)((b[3] << 8) | b[2]);
-    mz = (int16_t)((b[5] << 8) | b[4]);
-    return true;
-}
 
 void setUp(void) {}
 void tearDown(void) {}
 
-// 1) Wake up the IMU and turn bypass on, then check the compass.
+// 1) Wake up the IMU and turn bypass on, then check the compass (Imu.cpp).
 void test_wake_up(void)
 {
-    uint8_t wia = 0;
-    TEST_ASSERT_TRUE_MESSAGE(writeReg(MPU_ADDR, REG_PWR_MGMT_1, 0x01), "MPU-9250 does not answer");
-    TEST_ASSERT_TRUE(writeReg(MPU_ADDR, REG_INT_PIN_CFG, 0x02));    // bypass on
-    delay(10);
-    TEST_ASSERT_TRUE_MESSAGE(readRegs(MAG_ADDR, REG_WIA, 1, &wia), "compass (0x0C) does not answer");
-    TEST_ASSERT_EQUAL_HEX8(0x48, wia);
+    TEST_ASSERT_TRUE_MESSAGE(imuBegin(), "MPU-9250 or compass (0x0C) does not answer");
 }
 
 // 2) 30 s of raw values while you turn exactly 180 deg.
@@ -111,16 +54,9 @@ void test_record_half_circle(void)
         }
         lastLine += SAMPLE_MS;
 
-        long sx = 0, sy = 0, sz = 0;
-        for (uint8_t i = 0; i < AVG; i++) {
-            int16_t x, y, z;
-            TEST_ASSERT_TRUE(readMag(x, y, z));
-            sx += x;
-            sy += y;
-            sz += z;
-        }
-        snprintf(line, sizeof(line), "CAL %d %d %d",
-                 (int)(sx / AVG), (int)(sy / AVG), (int)(sz / AVG));
+        ImuRaw raw = {0, 0, 0, 0, 0};
+        TEST_ASSERT_TRUE(imuRead(raw));   // average of 4 readings
+        snprintf(line, sizeof(line), "CAL %d %d %d", raw.magX, raw.magY, raw.magZ);
         TEST_MESSAGE(line);
         samples++;
     }
@@ -154,5 +90,6 @@ void loop() {}
 3) The Nano only records. The maths is in fit_compass.py on the Mac,
    so the raw data stays in run1.txt .. run3.txt and can be checked again.
 
-4) AVG = 4: each line is the average of 4 readings (noise about +-3).
+4) Each line is the average of 4 readings (MAG_SAMPLES in Settings.h,
+   done by imuRead in Imu.cpp), noise about +-3. Same as before the move.
 */
