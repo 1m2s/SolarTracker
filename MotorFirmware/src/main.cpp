@@ -3,8 +3,9 @@
    I2C slave 0x19. The left Nano (or MATLAB) sends two messages:
      [254, a8]   azimuth  = a8 * 2 deg
      [255, g8]   elevation = g8 deg
-   When the left Nano asks, it answers 1 byte: the IMU switch
-   (1 = AN, 0 = AUS). It only reports the switch, it does not act on it.
+   When the left Nano asks, it answers 1 status byte:
+   bit 0 = IMU switch (1 = AN, 0 = AUS), bit 1 = stepper moving.
+   It only reports the switch, it does not act on it.
    Behaves like mode "ohne IMU" of Photovoltaiknachfuehrung.ino:
    at power-on the panel must face south and stand vertical.
 */
@@ -17,6 +18,7 @@
 #include "Motion.h"
 #include "Measure.h"
 #include "Display.h"
+#include "Status.h"
 
 // ---------- settings (same values as CurrentFirmware) ----------
 const uint8_t SLAVE_ADDR     = 0x19;    // 25, the address MATLAB and the left Nano use
@@ -33,6 +35,9 @@ LedControl lc = LedControl(10, 12, 11, 1);   // DIN D10, CLK D12, CS D11
 // ---------- written by the I2C interrupt ----------
 volatile uint8_t a8 = 90;   // 90 * 2 = 180 deg = south (start position)
 volatile uint8_t g8 = 0;    // 0 deg = vertical (start position)
+
+// ---------- written by loop(), read by the I2C interrupt ----------
+volatile uint8_t stepperMoving = 0;   // 1 = stepper still has steps to go
 
 // ---------- state ----------
 float off1 = 0;   // how far the stepper turned since power-on (deg)
@@ -58,11 +63,12 @@ void onMessage(int howMany)
 }
 
 // Runs inside the I2C interrupt when the left Nano asks.
-// Answers 1 byte: 1 = IMU switch AN (D7 at GND), 0 = AUS (D7 at 5 V).
+// Answers 1 status byte (see Status.h):
+// bit 0 = IMU switch AN (D7 at GND), bit 1 = stepper moving.
 void onAsk()
 {
-    uint8_t imuOn = (digitalRead(PIN_IMU_SWITCH) == LOW) ? 1 : 0;
-    Wire.write(imuOn);
+    bool imuOn = (digitalRead(PIN_IMU_SWITCH) == LOW);
+    Wire.write(statusByte(imuOn, stepperMoving != 0));
 }
 
 void setup()
@@ -91,6 +97,7 @@ void loop()
 
     // 1) Stepper: one step toward the target
     int8_t dir = stepDirection(azi, off1);
+    stepperMoving = (dir != 0) ? 1 : 0;   // read by onAsk (see note 5)
     if (dir != 0) {
         stepper_1.step(dir);
         off1 += dir * STEP_DEG;
@@ -135,6 +142,10 @@ void loop()
    Wire.requestFrom(0x19, 1) and decides what to do with it.
    D7 is read at the moment of the question, so the answer is
    always the current switch position.
+   Bit 1 (stepper moving) lets the left Nano skip compass reads
+   while the stepper's magnet may disturb the compass. It is set in
+   loop() before each step and cleared when no step is left.
+   Readers must mask: status & 0x01 = switch, status & 0x02 = moving.
    Schaltplan: the switch connects D7 to either 5 V or GND,
    so D7 is never floating and needs no pull-up.
 */
