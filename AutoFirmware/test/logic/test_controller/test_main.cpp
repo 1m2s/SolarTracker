@@ -455,6 +455,144 @@ void test_compass_counts_do_not_overflow(void)
     TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 72.0f));
 }
 
+static void latchImuOn(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON, 0u));
+}
+
+static void readyToResend(void)
+{
+    latchImuOn();
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+}
+
+void test_last_sent_starts_at_180(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 180.0f, controller.lastSentDeg);
+}
+
+void test_good_send_stores_angle(void)
+{
+    ctrlSendDone(controller, 1000u, 40.0f, true);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 40.0f, controller.lastSentDeg);
+}
+
+void test_failed_send_keeps_last_angle(void)
+{
+    ctrlSendDone(controller, 1000u, 40.0f, false);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 180.0f, controller.lastSentDeg);
+}
+
+void test_park_send_stores_180(void)
+{
+    ctrlSendDone(controller, 1000u, 40.0f, true);
+    ctrlSendDone(controller, 2000u, 180.0f, true);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 180.0f, controller.lastSentDeg);
+}
+
+void test_send_restarts_check_timer(void)
+{
+    latchImuOn();
+    ctrlSendDone(controller, 1500u, 40.0f, true);
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 1500u + COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 1500u + COMPASS_CHECK_MS));
+}
+
+void test_read_compass_only_when_imu_on_and_motor_still(void)
+{
+    TEST_ASSERT_FALSE(ctrlReadCompass(controller, 0u));
+    latchImuOn();
+    TEST_ASSERT_TRUE(ctrlReadCompass(controller, STATUS_IMU_ON));
+    TEST_ASSERT_FALSE(ctrlReadCompass(controller, STATUS_IMU_ON | STATUS_MOVING));
+}
+
+void test_no_compass_read_after_latch_fault(void)
+{
+    latchImuOn();
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, 0u, 2000u));
+    TEST_ASSERT_FALSE(ctrlReadCompass(controller, STATUS_IMU_ON));
+}
+
+void test_resend_allowed_when_all_ok(void)
+{
+    readyToResend();
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_with_imu_aus(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_without_heading(void)
+{
+    latchImuOn();
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_after_park(void)
+{
+    readyToResend();
+    ctrlSunAngles(controller, 264.0f, -15.0f, true);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_during_compass_error(void)
+{
+    readyToResend();
+    failCompass();
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_on_other_error(void)
+{
+    readyToResend();
+    ctrlAutoResult(controller, false);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+    ctrlAutoResult(controller, true);
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_after_matlab_timeout(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON, 0u));
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+    ctrlMatlabLine(controller, 0u, true);
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS));
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_mode_change_forgets_sun_angle(void)
+{
+    readyToResend();
+    (void)flipSwitch(SWITCH_CLOSED, 1000u);
+    TEST_ASSERT_FALSE(controller.sunValid);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+    ctrlSunAngles(controller, 210.0f, 21.0f, false);
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_after_latch_fault(void)
+{
+    readyToResend();
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, 0u, 2000u));
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
 int runAllTests(void)
 {
     UNITY_BEGIN();
@@ -507,6 +645,22 @@ int runAllTests(void)
     RUN_TEST(test_out_of_range_heading_counts_as_bad);
     RUN_TEST(test_init_resets_compass);
     RUN_TEST(test_compass_counts_do_not_overflow);
+    RUN_TEST(test_last_sent_starts_at_180);
+    RUN_TEST(test_good_send_stores_angle);
+    RUN_TEST(test_failed_send_keeps_last_angle);
+    RUN_TEST(test_park_send_stores_180);
+    RUN_TEST(test_send_restarts_check_timer);
+    RUN_TEST(test_read_compass_only_when_imu_on_and_motor_still);
+    RUN_TEST(test_no_compass_read_after_latch_fault);
+    RUN_TEST(test_resend_allowed_when_all_ok);
+    RUN_TEST(test_no_resend_with_imu_aus);
+    RUN_TEST(test_no_resend_without_heading);
+    RUN_TEST(test_no_resend_after_park);
+    RUN_TEST(test_no_resend_during_compass_error);
+    RUN_TEST(test_no_resend_on_other_error);
+    RUN_TEST(test_no_resend_after_matlab_timeout);
+    RUN_TEST(test_mode_change_forgets_sun_angle);
+    RUN_TEST(test_no_resend_after_latch_fault);
     return UNITY_END();
 }
 

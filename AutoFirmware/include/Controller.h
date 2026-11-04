@@ -52,6 +52,10 @@ struct Controller {
     bool     compassFailed;
     bool     hasHeading;
     float    headingDeg;
+    float    lastSentDeg;
+    float    sunAzimuthDeg;
+    float    sunElevationDeg;
+    bool     sunValid;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -77,5 +81,13 @@ bool ctrlBlocked(const Controller &controller);
 CompassResult ctrlCompassRead(Controller &controller, bool readOk, float headingDeg);
 
 bool ctrlCompassUsable(const Controller &controller);
+
+void ctrlSunAngles(Controller &controller, float azimuthDeg, float elevationDeg, bool parked);
+
+void ctrlSendDone(Controller &controller, uint32_t nowMs, float sentAzimuthDeg, bool ackOk);
+
+bool ctrlReadCompass(const Controller &controller, uint8_t status);
+
+bool ctrlResendAllowed(const Controller &controller);
 
 #endif

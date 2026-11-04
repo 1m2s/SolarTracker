@@ -4,6 +4,7 @@
 
 static const uint32_t ERROR_BLINK_MS = 200uL;
 static const uint32_t AUTO_BLINK_MS  = 1000uL;
+static const float    START_AZIMUTH_DEG = 180.0f;
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
 {
@@ -26,6 +27,10 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
     controller.compassFailed   = false;
     controller.hasHeading      = false;
     controller.headingDeg      = 0.0f;
+    controller.lastSentDeg     = START_AZIMUTH_DEG;
+    controller.sunAzimuthDeg   = 0.0f;
+    controller.sunElevationDeg = 0.0f;
+    controller.sunValid        = false;
 }
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
@@ -41,8 +46,9 @@ bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
         return false;
     }
 
-    controller.mode  = newMode;
-    controller.error = false;
+    controller.mode     = newMode;
+    controller.error    = false;
+    controller.sunValid = false;
     if (newMode == MODE_AUTO) {
         controller.runNow = true;
     } else {
@@ -192,4 +198,33 @@ CompassResult ctrlCompassRead(Controller &controller, bool readOk, float heading
 bool ctrlCompassUsable(const Controller &controller)
 {
     return controller.hasHeading && !controller.compassFailed;
+}
+
+void ctrlSunAngles(Controller &controller, float azimuthDeg, float elevationDeg, bool parked)
+{
+    controller.sunAzimuthDeg   = azimuthDeg;
+    controller.sunElevationDeg = elevationDeg;
+    controller.sunValid        = !parked;
+}
+
+void ctrlSendDone(Controller &controller, uint32_t nowMs, float sentAzimuthDeg, bool ackOk)
+{
+    controller.lastStatusMs = nowMs;
+    if (ackOk) {
+        controller.lastSentDeg = sentAzimuthDeg;
+    }
+}
+
+bool ctrlReadCompass(const Controller &controller, uint8_t status)
+{
+    bool motorStill = (status & STATUS_MOVING) == 0u;
+    return controller.imuKnown && controller.imuSwitchOn
+        && (controller.fault == FAULT_NONE) && motorStill;
+}
+
+bool ctrlResendAllowed(const Controller &controller)
+{
+    return controller.imuKnown && controller.imuSwitchOn
+        && (controller.fault == FAULT_NONE) && controller.sunValid
+        && ctrlCompassUsable(controller) && !controller.error;
 }
