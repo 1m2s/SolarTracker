@@ -12,6 +12,28 @@ All commands run inside `AutoFirmware/`.
 
 ⚠️ With CurrentFirmware on the right Nano, **IMU switch AN breaks the I2C bus**: no device answers (see `test_i2c_fullscan`, result 2 Nov 2026). With `MotorFirmware` on the right Nano this no longer happens, because the right Nano never starts IMU mode. The switch is only read and passed on (`test_imu_switch`).
 
+## Before every commit
+
+Run these in `AutoFirmware/`. All must pass before `git commit`.
+
+| # | Check | Command |
+|---|---|---|
+| 1 | Logic tests on the PC (same as CI) | `pio test -e native` |
+| 2 | No warnings in our code (strict flags, all of `src/` except `main.cpp` and `Imu.cpp`) | `bash tools/check_warnings.sh` |
+| 3 | Nano build without warnings (includes `main.cpp` and `Imu.cpp`) | `PLATFORMIO_BUILD_SRC_FLAGS="-Wall -Wextra -Wshadow -Werror" pio run -e nanoatmega328` |
+| 4 | Only if a file used by a `setup/` or `hardware/` test changed: build that test without flashing | `pio test -e nanosetup -f setup/<name> --without-uploading --without-testing` (`-e nanotest` for `hardware/`) |
+| 5 | Only if `MotorFirmware/` changed (run in `MotorFirmware/`) | `pio test -e native` and `pio run` |
+| 6 | Only if `main.cpp` or anything on the tracker changed: flash and test on the tracker | `pio run -e nanoatmega328 -t upload && pio device monitor` |
+
+After `git push`: check the green tick on GitHub (Actions). CI repeats 1–3, runs cppcheck on `src/` and builds and tests `MotorFirmware/`.
+
+cppcheck on the Mac (optional, same as CI):
+
+```bash
+pip install cppcheck==1.5.3
+cppcheck --enable=warning,performance,portability --std=c++11 --language=c++ -Iinclude --suppress=missingIncludeSystem --inline-suppr --error-exitcode=1 --quiet src/
+```
+
 ## Commands
 
 | Goal | Command |
