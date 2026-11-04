@@ -49,6 +49,8 @@ static void readSerial(uint32_t now);
 
 static void printHeading(float headingDeg, bool inError);
 
+static void resendIfTurned(uint32_t now);
+
 static void checkCompass(uint32_t now, uint8_t status);
 
 static void askStatus(uint32_t now);
@@ -249,6 +251,24 @@ static void printHeading(float headingDeg, bool inError)
     Serial.println();
 }
 
+static void resendIfTurned(uint32_t now)
+{
+    if (!ctrlResendAllowed(controller)) {
+        return;
+    }
+
+    float arrowDeg     = arrowHeading(controller.headingDeg);
+    float correctedDeg = edgeRule(controller.lastSentDeg,
+                                  correctedAzimuth(controller.sunAzimuthDeg, arrowDeg));
+    if (!needsResend(controller.lastSentDeg, correctedDeg)) {
+        return;
+    }
+
+    Serial.print(F("RESEND"));
+    bool ackOk = sendCorrected(controller.sunAzimuthDeg, controller.sunElevationDeg, arrowDeg, correctedDeg);
+    ctrlSendDone(controller, now, correctedDeg, ackOk);
+}
+
 static void checkCompass(uint32_t now, uint8_t status)
 {
     if (!controller.imuSwitchOn) {
@@ -274,6 +294,7 @@ static void checkCompass(uint32_t now, uint8_t status)
     CompassResult result = ctrlCompassRead(controller, readOk, headingDeg);
     if (result == COMPASS_OK) {
         printHeading(headingDeg, false);
+        resendIfTurned(now);
     } else if (result == COMPASS_BAD_IGNORED) {
         Serial.println(F("IMU     bad read (ignored)"));
     } else if (result == COMPASS_FAILED) {
@@ -289,6 +310,7 @@ static void checkCompass(uint32_t now, uint8_t status)
     } else {
         printHeading(headingDeg, false);
         Serial.println(F("compass OK again"));
+        resendIfTurned(now);
     }
 }
 
