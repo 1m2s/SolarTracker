@@ -35,7 +35,7 @@ heading is off by that angle:
 
 $$h_{\text{arrow}} = h_{\text{sensor}} + \text{IMU\\_TO\\_ARROW\\_DEG}$$
 
-**Result (4 Nov 2026): `IMU_TO_ARROW_DEG = -14`.** Not in the code yet; it goes in with the IMU mode.
+**Result (4 Nov 2026): `IMU_TO_ARROW_DEG = -14`.** In `include/config/Calibration.h`, not used yet; it goes in with the IMU mode.
 
 ### How it was measured
 1. Phone compass set to **magnetic** north (the sensor also gives magnetic north; the

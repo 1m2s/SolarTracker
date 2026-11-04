@@ -6,7 +6,7 @@ Usage (from AutoFirmware/):
 Every run must be an EXACT half turn (180 deg, table edge to table edge),
 held still at the start and at the end.
 
-Prints the five numbers for Heading.cpp:
+Prints the five numbers for include/config/Calibration.h:
     MX_CENTRE, MY_CENTRE   where the middle of the oval is
     SOFT_XX, SOFT_XY, SOFT_YY   how to stretch the oval back into a circle
 Only the Python standard library is used.
@@ -184,7 +184,7 @@ def main():
                 ok = False
 
     print()
-    print("For Heading.cpp:")
+    print("For include/config/Calibration.h:")
     print(f"  const float MX_CENTRE = {c[0] * MAG_SCALE:.2f}f;")
     print(f"  const float MY_CENTRE = {c[1] * MAG_SCALE:.2f}f;")
     print(f"  const float SOFT_XX   = {w[0]:.4f}f;")

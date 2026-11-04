@@ -1,14 +1,8 @@
 #include "Heading.h"
+#include "config/Calibration.h"
 #include <math.h>
 
 const float MAG_SCALE = 1200.0f / 4096.0f;
-const float MX_CENTRE = 2.08f;
-const float MY_CENTRE = 14.05f;
-const float MZ_CENTRE = -7.0f;
-
-const float SOFT_XX = 0.9529f;
-const float SOFT_XY = 0.1789f;
-const float SOFT_YY = 1.0830f;
 
 const float DEG_PER_RAD = 180.0f / (float)M_PI;
 

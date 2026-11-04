@@ -7,7 +7,7 @@
    EXACTLY 180 deg, until the same side lies against the same table edge
    again. Be there before 25 s and hold still until "STOP".
    The values are printed as "CAL x y z" lines. fit_compass.py (same
-   folder) computes the calibration for Heading.cpp from 3 such runs.
+   folder) computes the calibration for Calibration.h from 3 such runs.
    Needs: tracker on, USB to left Nano, MotorFirmware on the right Nano.
    Run (from AutoFirmware/), three times with run1, run2, run3:
      pio test -e nanosetup -f setup/test_compass_cal -v | tee test/setup/test_compass_cal/run1.txt
