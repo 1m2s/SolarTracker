@@ -1,0 +1,58 @@
+Testing...
+If you don't see any output for the first 10 secs, please reset board (press reset button)
+
+test/setup/test_compass/test_main.cpp:129:test_wake_up_imu:PASS
+test/setup/test_compass/test_main.cpp:130:test_compass_answers:PASS
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=308  raw m=   31    73    26  a=   744    -16
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   31    71    25  a=   704      8
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   31    71    27  a=   736     40
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   33    73    27  a=   672    -12
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=312  raw m=   33    71    28  a=   728     48
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   30    71    26  a=   708     -4
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   32    71    27  a=   708      8
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   33    72    28  a=   668     36
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   33    73    27  a=   648     80
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=312  raw m=   34    72    26  a=   712     28
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   32    72    27  a=   592     44
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   32    71    27  a=   744      8
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   31    71    26  a=   688     72
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   31    73    27  a=   684     40
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=313  raw m=   34    71    29  a=   704    -24
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   30    72    26  a=   652     48
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   33    72    27  a=   680      4
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   31    72    27  a=   660     80
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   32    71    26  a=   712    -12
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   32    72    28  a=   676      4
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=312  raw m=   32    70    26  a=   648     68
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   31    73    26  a=   740     32
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   34    73    28  a=   716    -20
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=312  raw m=   32    70    28  a=   788    -24
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   34    73    26  a=   764     64
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   32    73    26  a=   640    -24
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   32    73    25  a=   724    -44
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   32    74    27  a=   712     40
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   33    72    27  a=   728    -12
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   32    71    26  a=   716     40
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=308  raw m=   30    73    27  a=   664     28
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   31    71    26  a=   628     68
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=311  raw m=   32    72    27  a=   648     48
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   32    72    26  a=   692     52
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=315  raw m=   35    70    25  a=   724     16
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   31    72    28  a=   664    -12
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=314  raw m=   34    70    25  a=   692     80
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=309  raw m=   30    71    28  a=   700    -32
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=310  raw m=   32    72    29  a=   692     64
+test/setup/test_compass/test_main.cpp:116:test_print_heading:INFO: h=313  raw m=   34    71    26  a=   652     64
+test/setup/test_compass/test_main.cpp:131:test_print_heading:PASS
+
+-----------------------
+3 Tests 0 Failures 0 Ignored 
+OK
+
+- nanosetup:setup/test_compass [PASSED] Took 32.88 seconds -
+
+========================== SUMMARY ==========================
+Environment    Test                Status    Duration
+-------------  ------------------  --------  ------------
+nanosetup      setup/test_compass  PASSED    00:00:32.883
+========= 3 test cases: 3 succeeded in 00:00:32.883 =========
