@@ -31,9 +31,28 @@ jobs:
       - name: Install PlatformIO
         run: pip install --upgrade platformio
  
-      - name: Build firmware for the Nano
+      - name: Build firmware for the Nano (no warnings in src/)
         run: pio run -e nanoatmega328
+        env:
+          PLATFORMIO_BUILD_SRC_FLAGS: "-Wall -Wextra -Wshadow -Werror"
  
       - name: Run unit tests on the PC
         run: pio test -e native
- 
+
+      - name: No warnings in our code
+        run: bash tools/check_warnings.sh
+
+      - name: Static analysis (cppcheck)
+        run: |
+          pip install cppcheck==1.5.3
+          cppcheck --enable=warning,performance,portability --std=c++11 --language=c++ \
+                   -Iinclude --suppress=missingIncludeSystem --inline-suppr \
+                   --error-exitcode=1 --quiet src/
+
+      - name: Build motor firmware for the right Nano
+        working-directory: MotorFirmware
+        run: pio run -e nanoatmega328
+
+      - name: Run motor unit tests on the PC
+        working-directory: MotorFirmware
+        run: pio test -e native

@@ -1,12 +1,14 @@
 {
   "folders": [
     { "name": "SolarTracker (repo)", "path": "." },
-    { "name": "AutoFirmware (PlatformIO)", "path": "AutoFirmware" }
+    { "name": "AutoFirmware (PlatformIO)", "path": "AutoFirmware" },
+    { "name": "MotorFirmware (PlatformIO)", "path": "MotorFirmware" }
   ],
   "settings": {
     "files.exclude": {
       "**/.DS_Store": true,
-      "AutoFirmware": true
+      "AutoFirmware": true,
+      "MotorFirmware": true
     }
   }
 }

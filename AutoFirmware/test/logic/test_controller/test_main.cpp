@@ -1,0 +1,680 @@
+#include <unity.h>
+#include <math.h>
+#include "Controller.h"
+#include "config/Board.h"
+
+static const bool SWITCH_OPEN   = true;
+static const bool SWITCH_CLOSED = false;
+
+static const uint32_t NEAR_WRAP_MS = 4294967000u;
+
+static Controller controller;
+
+static uint32_t flipSwitch(bool switchOpen, uint32_t startMs);
+
+void setUp(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    (void)ctrlStatus(controller, true, 0u, 0u);
+}
+
+void tearDown(void) {}
+
+static uint32_t flipSwitch(bool switchOpen, uint32_t startMs)
+{
+    uint32_t acceptMs = startMs + DEBOUNCE_MS;
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, switchOpen, startMs));
+    TEST_ASSERT_TRUE(ctrlSwitch(controller, switchOpen, acceptMs));
+    return acceptMs;
+}
+
+void test_init_takes_mode_from_switch(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(MODE_AUTO, controller.mode);
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_EQUAL(MODE_MATLAB, controller.mode);
+    TEST_ASSERT_FALSE(controller.error);
+}
+
+void test_same_position_never_changes_mode(void)
+{
+    for (uint32_t nowMs = 0u; nowMs < 1000u; nowMs += 10u) {
+        TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_OPEN, nowMs));
+    }
+    TEST_ASSERT_EQUAL(MODE_AUTO, controller.mode);
+}
+
+void test_debounce_needs_50_ms_still(void)
+{
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 100u));
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 149u));
+    TEST_ASSERT_EQUAL(MODE_AUTO, controller.mode);
+    TEST_ASSERT_TRUE(ctrlSwitch(controller, SWITCH_CLOSED, 150u));
+    TEST_ASSERT_EQUAL(MODE_MATLAB, controller.mode);
+}
+
+void test_bounce_restarts_debounce(void)
+{
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 100u));
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_OPEN, 130u));
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 140u));
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, 180u));
+    TEST_ASSERT_TRUE(ctrlSwitch(controller, SWITCH_CLOSED, 190u));
+}
+
+void test_mode_change_reported_once(void)
+{
+    uint32_t acceptMs = flipSwitch(SWITCH_CLOSED, 100u);
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, acceptMs + 1u));
+    TEST_ASSERT_FALSE(ctrlSwitch(controller, SWITCH_CLOSED, acceptMs + 5000u));
+}
+
+void test_mode_change_clears_error(void)
+{
+    ctrlAutoResult(controller, false);
+    TEST_ASSERT_TRUE(controller.error);
+    (void)flipSwitch(SWITCH_CLOSED, 100u);
+    TEST_ASSERT_FALSE(controller.error);
+}
+
+void test_auto_first_cycle_runs_at_once(void)
+{
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, 1000u));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 1001u));
+}
+
+void test_auto_every_30_s(void)
+{
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, 1000u));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 1000u + AUTO_INTERVAL_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, 1000u + AUTO_INTERVAL_MS));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 1000u + AUTO_INTERVAL_MS + 1u));
+}
+
+void test_auto_never_due_in_matlab(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 0u));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 10u * AUTO_INTERVAL_MS));
+}
+
+void test_back_to_auto_runs_at_once(void)
+{
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, 1000u));
+    uint32_t matlabMs = flipSwitch(SWITCH_CLOSED, 2000u);
+    uint32_t autoMs   = flipSwitch(SWITCH_OPEN, matlabMs + 1000u);
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, autoMs));
+}
+
+void test_auto_cycle_across_millis_wrap(void)
+{
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, NEAR_WRAP_MS));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, NEAR_WRAP_MS + AUTO_INTERVAL_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, NEAR_WRAP_MS + AUTO_INTERVAL_MS));
+}
+
+void test_auto_result_sets_and_clears_error(void)
+{
+    ctrlAutoResult(controller, false);
+    TEST_ASSERT_TRUE(controller.error);
+    ctrlAutoResult(controller, true);
+    TEST_ASSERT_FALSE(controller.error);
+}
+
+void test_matlab_timeout_after_180_s(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS - 1u));
+    TEST_ASSERT_FALSE(controller.error);
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS));
+    TEST_ASSERT_TRUE(controller.error);
+}
+
+void test_matlab_timeout_reported_once(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS));
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS + 1u));
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, 10u * MATLAB_TIMEOUT_MS));
+}
+
+void test_no_timeout_in_auto(void)
+{
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, 10u * MATLAB_TIMEOUT_MS));
+    TEST_ASSERT_FALSE(controller.error);
+}
+
+void test_good_line_restarts_timeout_and_clears_error(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS));
+    ctrlMatlabLine(controller, 200000u, true);
+    TEST_ASSERT_FALSE(controller.error);
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, 200000u + MATLAB_TIMEOUT_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, 200000u + MATLAB_TIMEOUT_MS));
+}
+
+void test_line_not_answered_sets_error(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    ctrlMatlabLine(controller, 1000u, false);
+    TEST_ASSERT_TRUE(controller.error);
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, 1000u + MATLAB_TIMEOUT_MS - 1u));
+}
+
+void test_switch_to_matlab_restarts_timeout(void)
+{
+    uint32_t matlabMs = flipSwitch(SWITCH_CLOSED, 500000u);
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, matlabMs + MATLAB_TIMEOUT_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, matlabMs + MATLAB_TIMEOUT_MS));
+}
+
+void test_matlab_timeout_across_millis_wrap(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, NEAR_WRAP_MS);
+    TEST_ASSERT_FALSE(ctrlMatlabTimedOut(controller, NEAR_WRAP_MS + MATLAB_TIMEOUT_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, NEAR_WRAP_MS + MATLAB_TIMEOUT_MS));
+}
+
+void test_led_auto_slow_blink(void)
+{
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 999u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 1000u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 1999u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 2000u));
+}
+
+void test_led_matlab_always_on(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 1000u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 1500u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 123456u));
+}
+
+void test_led_error_fast_blink(void)
+{
+    ctrlAutoResult(controller, false);
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 199u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 399u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 400u));
+}
+
+void test_led_error_wins_over_matlab(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    ctrlMatlabLine(controller, 0u, false);
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
+}
+
+void test_led_millis_wrap(void)
+{
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 4294967000u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 4294967295u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 4294967295u));
+}
+
+void test_status_asked_at_once_at_start(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 1000u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 1000u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 1001u));
+}
+
+void test_status_retry_every_250_ms_until_known(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, STATUS_RETRY_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, STATUS_RETRY_MS));
+}
+
+void test_nothing_sent_before_first_answer(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 0u));
+    TEST_ASSERT_FALSE(controller.error);
+}
+
+void test_first_answer_aus_latches_and_auto_runs(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, 0u, 250u));
+    TEST_ASSERT_FALSE(controller.imuSwitchOn);
+    TEST_ASSERT_FALSE(ctrlBlocked(controller));
+    TEST_ASSERT_TRUE(ctrlAutoDue(controller, 250u));
+}
+
+void test_first_answer_an_latches_on(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON, 0u));
+    TEST_ASSERT_TRUE(controller.imuSwitchOn);
+}
+
+void test_first_answer_an_while_moving_latches_on(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON | STATUS_MOVING, 0u));
+    TEST_ASSERT_TRUE(controller.imuSwitchOn);
+}
+
+void test_no_answer_waits_then_faults_at_5_s(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_EQUAL(RESULT_WAITING, ctrlStatus(controller, false, 0u, STARTUP_WAIT_MS - 1u));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, false, 0u, STARTUP_WAIT_MS));
+    TEST_ASSERT_EQUAL(FAULT_NO_ANSWER, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 400u));
+}
+
+void test_after_latch_asked_every_2_s(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, 0u, 0u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, COMPASS_CHECK_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS + 1u));
+}
+
+void test_moving_bit_is_not_a_switch_change(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_SAME, ctrlStatus(controller, true, STATUS_MOVING, 2000u));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+}
+
+void test_switch_moved_faults(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, STATUS_IMU_ON, 2000u));
+    TEST_ASSERT_EQUAL(FAULT_SWITCH_MOVED, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlAutoDue(controller, 2000u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 2200u));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 2400u));
+}
+
+void test_fault_is_permanent(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, STATUS_IMU_ON, 2000u));
+    ctrlAutoResult(controller, true);
+    (void)flipSwitch(SWITCH_CLOSED, 3000u);
+    ctrlMatlabLine(controller, 4000u, true);
+    TEST_ASSERT_EQUAL(FAULT_SWITCH_MOVED, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 4200u));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 100000u));
+    TEST_ASSERT_EQUAL(RESULT_IGNORED, ctrlStatus(controller, true, 0u, 100000u));
+    TEST_ASSERT_EQUAL(FAULT_SWITCH_MOVED, controller.fault);
+}
+
+void test_missed_answer_after_latch_is_not_a_fault(void)
+{
+    TEST_ASSERT_EQUAL(RESULT_NO_ANSWER, ctrlStatus(controller, false, 0u, 2000u));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+    TEST_ASSERT_FALSE(ctrlBlocked(controller));
+}
+
+void test_init_forgets_the_latch(void)
+{
+    TEST_ASSERT_FALSE(ctrlBlocked(controller));
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+}
+
+void test_status_timer_across_millis_wrap(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, NEAR_WRAP_MS);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, NEAR_WRAP_MS));
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, 0u, NEAR_WRAP_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, NEAR_WRAP_MS + COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, NEAR_WRAP_MS + COMPASS_CHECK_MS));
+}
+
+static void failCompass(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_FAILED, ctrlCompassRead(controller, false, 0.0f));
+}
+
+void test_no_heading_before_first_good_read(void)
+{
+    TEST_ASSERT_FALSE(controller.hasHeading);
+    TEST_ASSERT_FALSE(ctrlCompassUsable(controller));
+    TEST_ASSERT_FALSE(controller.compassFailed);
+}
+
+void test_good_read_stores_heading(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_TRUE(ctrlCompassUsable(controller));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 72.0f, controller.headingDeg);
+}
+
+void test_one_and_two_bad_reads_are_ignored(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_TRUE(ctrlCompassUsable(controller));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 72.0f, controller.headingDeg);
+}
+
+void test_third_bad_read_fails(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    failCompass();
+    TEST_ASSERT_TRUE(controller.compassFailed);
+    TEST_ASSERT_FALSE(ctrlCompassUsable(controller));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 0u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 200u));
+}
+
+void test_good_read_resets_bad_count(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_FALSE(controller.compassFailed);
+}
+
+void test_recovery_needs_3_good_reads_in_a_row(void)
+{
+    failCompass();
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_TRUE(ctrlCompassUsable(controller));
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 74.0f));
+}
+
+void test_bad_read_restarts_recovery(void)
+{
+    failCompass();
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, false, 0.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 74.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 74.0f));
+}
+
+void test_heading_updated_during_error(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    failCompass();
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 80.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 80.0f, controller.headingDeg);
+    TEST_ASSERT_FALSE(ctrlCompassUsable(controller));
+}
+
+void test_out_of_range_heading_counts_as_bad(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, true, NAN));
+    TEST_ASSERT_EQUAL(COMPASS_BAD_IGNORED, ctrlCompassRead(controller, true, 360.0f));
+    TEST_ASSERT_EQUAL(COMPASS_FAILED, ctrlCompassRead(controller, true, -1.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 72.0f, controller.headingDeg);
+}
+
+void test_init_resets_compass(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    failCompass();
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_FALSE(controller.compassFailed);
+    TEST_ASSERT_FALSE(controller.hasHeading);
+}
+
+void test_compass_counts_do_not_overflow(void)
+{
+    for (uint16_t read = 0u; read < 1000u; read++) {
+        TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    }
+    failCompass();
+    for (uint16_t read = 0u; read < 1000u; read++) {
+        TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, false, 0.0f));
+    }
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 72.0f));
+}
+
+static void latchImuOn(void)
+{
+    ctrlInit(controller, SWITCH_OPEN, 0u);
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON, 0u));
+}
+
+static void readyToResend(void)
+{
+    latchImuOn();
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+}
+
+void test_last_sent_starts_at_180(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 180.0f, controller.lastSentDeg);
+}
+
+void test_good_send_stores_angle(void)
+{
+    ctrlSendDone(controller, 1000u, 40.0f, true);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 40.0f, controller.lastSentDeg);
+}
+
+void test_failed_send_keeps_last_angle(void)
+{
+    ctrlSendDone(controller, 1000u, 40.0f, false);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 180.0f, controller.lastSentDeg);
+}
+
+void test_park_send_stores_180(void)
+{
+    ctrlSendDone(controller, 1000u, 40.0f, true);
+    ctrlSendDone(controller, 2000u, 180.0f, true);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 180.0f, controller.lastSentDeg);
+}
+
+void test_send_restarts_check_timer(void)
+{
+    latchImuOn();
+    ctrlSendDone(controller, 1500u, 40.0f, true);
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 1500u + COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 1500u + COMPASS_CHECK_MS));
+}
+
+void test_read_compass_only_when_imu_on_and_motor_still(void)
+{
+    TEST_ASSERT_FALSE(ctrlReadCompass(controller, 0u));
+    latchImuOn();
+    TEST_ASSERT_TRUE(ctrlReadCompass(controller, STATUS_IMU_ON));
+    TEST_ASSERT_FALSE(ctrlReadCompass(controller, STATUS_IMU_ON | STATUS_MOVING));
+}
+
+void test_no_compass_read_after_latch_fault(void)
+{
+    latchImuOn();
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, 0u, 2000u));
+    TEST_ASSERT_FALSE(ctrlReadCompass(controller, STATUS_IMU_ON));
+}
+
+void test_resend_allowed_when_all_ok(void)
+{
+    readyToResend();
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_with_imu_aus(void)
+{
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_without_heading(void)
+{
+    latchImuOn();
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_after_park(void)
+{
+    readyToResend();
+    ctrlSunAngles(controller, 264.0f, -15.0f, true);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_during_compass_error(void)
+{
+    readyToResend();
+    failCompass();
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_STILL_FAILED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_EQUAL(COMPASS_RECOVERED, ctrlCompassRead(controller, true, 72.0f));
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_on_other_error(void)
+{
+    readyToResend();
+    ctrlAutoResult(controller, false);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+    ctrlAutoResult(controller, true);
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_after_matlab_timeout(void)
+{
+    ctrlInit(controller, SWITCH_CLOSED, 0u);
+    TEST_ASSERT_EQUAL(RESULT_LATCHED, ctrlStatus(controller, true, STATUS_IMU_ON, 0u));
+    TEST_ASSERT_EQUAL(COMPASS_OK, ctrlCompassRead(controller, true, 72.0f));
+    ctrlSunAngles(controller, 200.0f, 20.0f, false);
+    ctrlMatlabLine(controller, 0u, true);
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+    TEST_ASSERT_TRUE(ctrlMatlabTimedOut(controller, MATLAB_TIMEOUT_MS));
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+void test_mode_change_forgets_sun_angle(void)
+{
+    readyToResend();
+    (void)flipSwitch(SWITCH_CLOSED, 1000u);
+    TEST_ASSERT_FALSE(controller.sunValid);
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+    ctrlSunAngles(controller, 210.0f, 21.0f, false);
+    TEST_ASSERT_TRUE(ctrlResendAllowed(controller));
+}
+
+void test_no_resend_after_latch_fault(void)
+{
+    readyToResend();
+    TEST_ASSERT_EQUAL(RESULT_FAULT, ctrlStatus(controller, true, 0u, 2000u));
+    TEST_ASSERT_FALSE(ctrlResendAllowed(controller));
+}
+
+int runAllTests(void)
+{
+    UNITY_BEGIN();
+    RUN_TEST(test_init_takes_mode_from_switch);
+    RUN_TEST(test_same_position_never_changes_mode);
+    RUN_TEST(test_debounce_needs_50_ms_still);
+    RUN_TEST(test_bounce_restarts_debounce);
+    RUN_TEST(test_mode_change_reported_once);
+    RUN_TEST(test_mode_change_clears_error);
+    RUN_TEST(test_auto_first_cycle_runs_at_once);
+    RUN_TEST(test_auto_every_30_s);
+    RUN_TEST(test_auto_never_due_in_matlab);
+    RUN_TEST(test_back_to_auto_runs_at_once);
+    RUN_TEST(test_auto_cycle_across_millis_wrap);
+    RUN_TEST(test_auto_result_sets_and_clears_error);
+    RUN_TEST(test_matlab_timeout_after_180_s);
+    RUN_TEST(test_matlab_timeout_reported_once);
+    RUN_TEST(test_no_timeout_in_auto);
+    RUN_TEST(test_good_line_restarts_timeout_and_clears_error);
+    RUN_TEST(test_line_not_answered_sets_error);
+    RUN_TEST(test_switch_to_matlab_restarts_timeout);
+    RUN_TEST(test_matlab_timeout_across_millis_wrap);
+    RUN_TEST(test_led_auto_slow_blink);
+    RUN_TEST(test_led_matlab_always_on);
+    RUN_TEST(test_led_error_fast_blink);
+    RUN_TEST(test_led_error_wins_over_matlab);
+    RUN_TEST(test_led_millis_wrap);
+    RUN_TEST(test_status_asked_at_once_at_start);
+    RUN_TEST(test_status_retry_every_250_ms_until_known);
+    RUN_TEST(test_nothing_sent_before_first_answer);
+    RUN_TEST(test_first_answer_aus_latches_and_auto_runs);
+    RUN_TEST(test_first_answer_an_latches_on);
+    RUN_TEST(test_first_answer_an_while_moving_latches_on);
+    RUN_TEST(test_no_answer_waits_then_faults_at_5_s);
+    RUN_TEST(test_after_latch_asked_every_2_s);
+    RUN_TEST(test_moving_bit_is_not_a_switch_change);
+    RUN_TEST(test_switch_moved_faults);
+    RUN_TEST(test_fault_is_permanent);
+    RUN_TEST(test_missed_answer_after_latch_is_not_a_fault);
+    RUN_TEST(test_init_forgets_the_latch);
+    RUN_TEST(test_status_timer_across_millis_wrap);
+    RUN_TEST(test_no_heading_before_first_good_read);
+    RUN_TEST(test_good_read_stores_heading);
+    RUN_TEST(test_one_and_two_bad_reads_are_ignored);
+    RUN_TEST(test_third_bad_read_fails);
+    RUN_TEST(test_good_read_resets_bad_count);
+    RUN_TEST(test_recovery_needs_3_good_reads_in_a_row);
+    RUN_TEST(test_bad_read_restarts_recovery);
+    RUN_TEST(test_heading_updated_during_error);
+    RUN_TEST(test_out_of_range_heading_counts_as_bad);
+    RUN_TEST(test_init_resets_compass);
+    RUN_TEST(test_compass_counts_do_not_overflow);
+    RUN_TEST(test_last_sent_starts_at_180);
+    RUN_TEST(test_good_send_stores_angle);
+    RUN_TEST(test_failed_send_keeps_last_angle);
+    RUN_TEST(test_park_send_stores_180);
+    RUN_TEST(test_send_restarts_check_timer);
+    RUN_TEST(test_read_compass_only_when_imu_on_and_motor_still);
+    RUN_TEST(test_no_compass_read_after_latch_fault);
+    RUN_TEST(test_resend_allowed_when_all_ok);
+    RUN_TEST(test_no_resend_with_imu_aus);
+    RUN_TEST(test_no_resend_without_heading);
+    RUN_TEST(test_no_resend_after_park);
+    RUN_TEST(test_no_resend_during_compass_error);
+    RUN_TEST(test_no_resend_on_other_error);
+    RUN_TEST(test_no_resend_after_matlab_timeout);
+    RUN_TEST(test_mode_change_forgets_sun_angle);
+    RUN_TEST(test_no_resend_after_latch_fault);
+    return UNITY_END();
+}
+
+#ifdef ARDUINO
+#include <Arduino.h>
+void setup()
+{
+    delay(2000);
+    runAllTests();
+}
+void loop() {}
+#else
+int main(void)
+{
+    return runAllTests();
+}
+#endif
