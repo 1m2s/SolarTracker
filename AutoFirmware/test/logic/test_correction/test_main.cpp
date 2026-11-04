@@ -113,16 +113,16 @@ void test_edge_noise_before_crossing_sends_nothing(void)
     TEST_ASSERT_FALSE(needsResend(358.0f, edgeRule(358.0f, 2.0f)));
 }
 
-void test_resend_3_deg_no(void)
+void test_resend_5_deg_no(void)
 {
-    TEST_ASSERT_FALSE(needsResend(100.0f, 103.0f));
-    TEST_ASSERT_FALSE(needsResend(100.0f, 97.0f));
+    TEST_ASSERT_FALSE(needsResend(100.0f, 105.0f));
+    TEST_ASSERT_FALSE(needsResend(100.0f, 95.0f));
 }
 
-void test_resend_4_deg_yes(void)
+void test_resend_6_deg_yes(void)
 {
-    TEST_ASSERT_TRUE(needsResend(100.0f, 104.0f));
-    TEST_ASSERT_TRUE(needsResend(100.0f, 96.0f));
+    TEST_ASSERT_TRUE(needsResend(100.0f, 106.0f));
+    TEST_ASSERT_TRUE(needsResend(100.0f, 94.0f));
 }
 
 void test_resend_kept_edge_angle_no(void)
@@ -156,8 +156,8 @@ int runAllTests(void)
     RUN_TEST(test_edge_normal_tracking_unchanged);
     RUN_TEST(test_edge_noise_cannot_flip_back);
     RUN_TEST(test_edge_noise_before_crossing_sends_nothing);
-    RUN_TEST(test_resend_3_deg_no);
-    RUN_TEST(test_resend_4_deg_yes);
+    RUN_TEST(test_resend_5_deg_no);
+    RUN_TEST(test_resend_6_deg_yes);
     RUN_TEST(test_resend_kept_edge_angle_no);
     RUN_TEST(test_resend_nan_no);
     return UNITY_END();

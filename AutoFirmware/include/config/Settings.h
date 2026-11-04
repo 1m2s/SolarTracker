@@ -33,7 +33,7 @@ const uint32_t STARTUP_WAIT_MS  = 5000uL;
 const uint8_t COMPASS_FAIL_READS    = 3u;
 const uint8_t COMPASS_RECOVER_READS = 3u;
 
-const float RESEND_DEG      = 4.0f;
+const float RESEND_DEG      = 6.0f;
 const float EDGE_MARGIN_DEG = 10.0f;
 
 #endif
