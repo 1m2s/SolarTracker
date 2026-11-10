@@ -14,7 +14,8 @@ enum ImuFault : uint8_t {
     FAULT_NO_ANSWER    = 1,
     FAULT_SWITCH_MOVED = 2,
     FAULT_COMPASS      = 3,
-    FAULT_NOT_SOUTH    = 4
+    FAULT_NOT_SOUTH    = 4,
+    FAULT_TURN_TIMEOUT = 5
 };
 
 enum StatusResult : uint8_t {
@@ -50,7 +51,8 @@ enum StartupStep : uint8_t {
     STEP_START_MEASURE = 2,
     STEP_READ          = 3,
     STEP_AIM           = 4,
-    STEP_DONE          = 5
+    STEP_DONE          = 5,
+    STEP_FAULT         = 6
 };
 
 struct Controller {

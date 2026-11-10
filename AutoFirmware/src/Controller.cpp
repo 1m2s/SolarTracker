@@ -276,6 +276,13 @@ StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs)
         controller.startup = STARTUP_AIMING;
         return STEP_AIM;
 
+    case STARTUP_TURNING:
+        if (!isDue(nowMs, controller.startupMs, ALIGN_TURN_MAX_MS)) {
+            return STEP_NONE;
+        }
+        controller.fault = FAULT_TURN_TIMEOUT;
+        return STEP_FAULT;
+
     case STARTUP_HOLDING:
         if (!isDue(nowMs, controller.startupMs, ALIGN_HOLD_MS)) {
             return STEP_NONE;

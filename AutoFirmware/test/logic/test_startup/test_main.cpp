@@ -258,6 +258,32 @@ void test_startup_across_millis_wrap(void)
     TEST_ASSERT_EQUAL(STEP_DONE, ctrlStartupStep(controller, holdMs + ALIGN_HOLD_MS));
 }
 
+void test_turn_too_long_faults(void)
+{
+    uint32_t aimMs = measureUntilAim(latchAndSettle(100u));
+    (void)ctrlStartupMeasured(controller, true, true, 206.5f, aimMs);
+    uint8_t moving = (uint8_t)(STATUS_IMU_ON | STATUS_MOVING);
+    TEST_ASSERT_FALSE(ctrlStartupMotor(controller, moving, aimMs + 10000u));
+    TEST_ASSERT_EQUAL(STEP_NONE, ctrlStartupStep(controller, aimMs + ALIGN_TURN_MAX_MS - 1u));
+    TEST_ASSERT_EQUAL(STEP_FAULT, ctrlStartupStep(controller, aimMs + ALIGN_TURN_MAX_MS));
+    TEST_ASSERT_EQUAL(FAULT_TURN_TIMEOUT, controller.fault);
+    TEST_ASSERT_TRUE(ctrlBlocked(controller));
+    TEST_ASSERT_TRUE(ctrlLedOn(controller, 40000u));
+    TEST_ASSERT_FALSE(ctrlLedOn(controller, 40200u));
+    TEST_ASSERT_FALSE(ctrlStartupMotor(controller, STATUS_IMU_ON, aimMs + ALIGN_TURN_MAX_MS + 1u));
+    TEST_ASSERT_EQUAL(STEP_NONE, ctrlStartupStep(controller, aimMs + 60000u));
+}
+
+void test_turn_finished_in_time_no_fault(void)
+{
+    uint32_t aimMs = measureUntilAim(latchAndSettle(100u));
+    (void)ctrlStartupMeasured(controller, true, true, 206.5f, aimMs);
+    TEST_ASSERT_TRUE(ctrlStartupMotor(controller, STATUS_IMU_ON, aimMs + ALIGN_TURN_MAX_MS - 1u));
+    TEST_ASSERT_EQUAL(STEP_NONE, ctrlStartupStep(controller, aimMs + ALIGN_TURN_MAX_MS));
+    TEST_ASSERT_EQUAL(FAULT_NONE, controller.fault);
+    TEST_ASSERT_EQUAL(STARTUP_HOLDING, controller.startup);
+}
+
 int runAllTests(void)
 {
     UNITY_BEGIN();
@@ -282,6 +308,8 @@ int runAllTests(void)
     RUN_TEST(test_switch_moved_during_startup_stops_it);
     RUN_TEST(test_init_resets_startup);
     RUN_TEST(test_startup_across_millis_wrap);
+    RUN_TEST(test_turn_too_long_faults);
+    RUN_TEST(test_turn_finished_in_time_no_fault);
     return UNITY_END();
 }
 
