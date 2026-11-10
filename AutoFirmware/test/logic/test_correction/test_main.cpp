@@ -7,14 +7,19 @@ const float TOLERANCE_DEG = 0.001f;
 void setUp(void) {}
 void tearDown(void) {}
 
-void test_arrow_heading_adds_offset_and_declination(void)
+void test_panel_heading_adds_offset_and_declination(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 30.0f, arrowHeading(40.1f));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 126.0f, panelHeading(40.1f));
 }
 
-void test_arrow_heading_wraps_below_zero(void)
+void test_panel_heading_wraps_above_360(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 354.9f, arrowHeading(5.0f));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 25.9f, panelHeading(300.0f));
+}
+
+void test_panel_heading_outdoor_position_2(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 206.5f, panelHeading(120.6f));
 }
 
 void test_example_250_and_30_gives_40(void)
@@ -22,11 +27,32 @@ void test_example_250_and_30_gives_40(void)
     TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 40.0f, correctedAzimuth(250.0f, 30.0f));
 }
 
-void test_arrow_south_gives_sun_angle(void)
+void test_panel_south_gives_sun_angle(void)
 {
     TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG,  50.0f, correctedAzimuth( 50.0f, 180.0f));
     TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 180.0f, correctedAzimuth(180.0f, 180.0f));
     TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 310.0f, correctedAzimuth(310.0f, 180.0f));
+}
+
+void test_south_target_panel_at_30_gives_330(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 330.0f, correctedAzimuth(180.0f, 30.0f));
+}
+
+void test_south_target_panel_at_200_gives_160(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 160.0f, correctedAzimuth(180.0f, 200.0f));
+}
+
+void test_south_target_safe_range_edges(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG,  50.0f, correctedAzimuth(180.0f, 310.0f));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 310.0f, correctedAzimuth(180.0f,  50.0f));
+}
+
+void test_south_target_outdoor_position_2(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 153.5f, correctedAzimuth(180.0f, panelHeading(120.6f)));
 }
 
 void test_wraps_below_zero(void)
@@ -47,8 +73,8 @@ void test_exactly_360_becomes_0(void)
 void test_result_always_0_to_below_360(void)
 {
     for (int sunDeg = 0; sunDeg <= 360; sunDeg += 5) {
-        for (int arrowDeg = 0; arrowDeg <= 360; arrowDeg += 5) {
-            float resultDeg = correctedAzimuth((float)sunDeg, (float)arrowDeg);
+        for (int panelDeg = 0; panelDeg <= 360; panelDeg += 5) {
+            float resultDeg = correctedAzimuth((float)sunDeg, (float)panelDeg);
             TEST_ASSERT_TRUE(resultDeg >= 0.0f);
             TEST_ASSERT_TRUE(resultDeg < 360.0f);
         }
@@ -57,7 +83,7 @@ void test_result_always_0_to_below_360(void)
 
 void test_nan_heading_gives_nan(void)
 {
-    TEST_ASSERT_TRUE(isnan(arrowHeading(NAN)));
+    TEST_ASSERT_TRUE(isnan(panelHeading(NAN)));
     TEST_ASSERT_TRUE(isnan(correctedAzimuth(200.0f, NAN)));
 }
 
@@ -138,10 +164,15 @@ void test_resend_nan_no(void)
 int runAllTests(void)
 {
     UNITY_BEGIN();
-    RUN_TEST(test_arrow_heading_adds_offset_and_declination);
-    RUN_TEST(test_arrow_heading_wraps_below_zero);
+    RUN_TEST(test_panel_heading_adds_offset_and_declination);
+    RUN_TEST(test_panel_heading_wraps_above_360);
+    RUN_TEST(test_panel_heading_outdoor_position_2);
     RUN_TEST(test_example_250_and_30_gives_40);
-    RUN_TEST(test_arrow_south_gives_sun_angle);
+    RUN_TEST(test_panel_south_gives_sun_angle);
+    RUN_TEST(test_south_target_panel_at_30_gives_330);
+    RUN_TEST(test_south_target_panel_at_200_gives_160);
+    RUN_TEST(test_south_target_safe_range_edges);
+    RUN_TEST(test_south_target_outdoor_position_2);
     RUN_TEST(test_wraps_below_zero);
     RUN_TEST(test_wraps_above_360);
     RUN_TEST(test_exactly_360_becomes_0);

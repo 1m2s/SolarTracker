@@ -33,7 +33,7 @@ static bool writeTarget(uint8_t azimuthByte, uint8_t elevationByte);
 
 static bool sendTarget(float azimuthDeg, float elevationDeg);
 
-static bool sendCorrected(float sunAzimuthDeg, float sunElevationDeg, float arrowDeg, float correctedDeg);
+static bool sendCorrected(float sunAzimuthDeg, float sunElevationDeg, float panelDeg, float correctedDeg);
 
 static bool sendSun(uint32_t now, float azimuthDeg, float elevationDeg);
 
@@ -96,14 +96,14 @@ static bool sendTarget(float azimuthDeg, float elevationDeg)
     return writeTarget(azimuthByte, elevationByte);
 }
 
-static bool sendCorrected(float sunAzimuthDeg, float sunElevationDeg, float arrowDeg, float correctedDeg)
+static bool sendCorrected(float sunAzimuthDeg, float sunElevationDeg, float panelDeg, float correctedDeg)
 {
     uint8_t azimuthByte   = toUint8(correctedDeg / 2.0f);
     uint8_t elevationByte = toUint8(sunElevationDeg);
 
     Serial.print(F("  az="));     Serial.print(sunAzimuthDeg, 4);
     Serial.print(F("  el="));     Serial.print(sunElevationDeg, 4);
-    Serial.print(F("  arrow="));  Serial.print(arrowDeg, 1);
+    Serial.print(F("  panel="));  Serial.print(panelDeg, 1);
     Serial.print(F("  phi="));    Serial.print(correctedDeg, 1);
     Serial.print(F("  azByte=")); Serial.print(azimuthByte);
     Serial.print(F("  elByte=")); Serial.print(elevationByte);
@@ -130,9 +130,9 @@ static bool sendSun(uint32_t now, float azimuthDeg, float elevationDeg)
         Serial.print(F("  no heading ->"));
         ackOk = sendTarget(PARK_AZIMUTH_DEG, PARK_ELEVATION_DEG);
     } else {
-        float arrowDeg = arrowHeading(controller.headingDeg);
-        sentDeg = edgeRule(controller.lastSentDeg, correctedAzimuth(azimuthDeg, arrowDeg));
-        ackOk   = sendCorrected(azimuthDeg, elevationDeg, arrowDeg, sentDeg);
+        float panelDeg = panelHeading(controller.headingDeg);
+        sentDeg = edgeRule(controller.lastSentDeg, correctedAzimuth(azimuthDeg, panelDeg));
+        ackOk   = sendCorrected(azimuthDeg, elevationDeg, panelDeg, sentDeg);
     }
 
     ctrlSendDone(controller, now, sentDeg, ackOk);
@@ -243,8 +243,8 @@ static void printHeading(float headingDeg, bool inError)
 {
     Serial.print(F("IMU     h="));
     Serial.print(headingDeg, 1);
-    Serial.print(F("  arrow="));
-    Serial.print(arrowHeading(headingDeg), 1);
+    Serial.print(F("  panel="));
+    Serial.print(panelHeading(headingDeg), 1);
     if (inError) {
         Serial.print(F("  (error)"));
     }
@@ -257,15 +257,15 @@ static void resendIfTurned(uint32_t now)
         return;
     }
 
-    float arrowDeg     = arrowHeading(controller.headingDeg);
+    float panelDeg     = panelHeading(controller.headingDeg);
     float correctedDeg = edgeRule(controller.lastSentDeg,
-                                  correctedAzimuth(controller.sunAzimuthDeg, arrowDeg));
+                                  correctedAzimuth(controller.sunAzimuthDeg, panelDeg));
     if (!needsResend(controller.lastSentDeg, correctedDeg)) {
         return;
     }
 
     Serial.print(F("RESEND"));
-    bool ackOk = sendCorrected(controller.sunAzimuthDeg, controller.sunElevationDeg, arrowDeg, correctedDeg);
+    bool ackOk = sendCorrected(controller.sunAzimuthDeg, controller.sunElevationDeg, panelDeg, correctedDeg);
     ctrlSendDone(controller, now, correctedDeg, ackOk);
 }
 

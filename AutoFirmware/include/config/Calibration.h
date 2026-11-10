@@ -16,8 +16,8 @@ const float SOFT_XX = 0.9373f;  //how much x shrinks <1
 const float SOFT_XY = 0.1896f; //oval tilt and theres only one because the matrix is symmetric
 const float SOFT_YY = 1.1053f; //how much y stretches >1
 
-//used in Correction.cpp23 return wrapDeg(sensorHeadingDeg + IMU_TO_ARROW_DEG + MAG_DECLINATION_DEG);
-const float IMU_TO_ARROW_DEG = -14.0f; //as sensor measure the xaxis's pointing but we need the base arrow points so the sensor sits about 14deg turned relavtive to the arrow
+//used in Correction.cpp23 return wrapDeg(sensorHeadingDeg + IMU_TO_PANEL_DEG + MAG_DECLINATION_DEG);
+const float IMU_TO_PANEL_DEG = 82.0f; //sensor measures where its x axis points but we need where the panel faces, measured outdoors 10 Nov at two positions 80 and 84.4, average 82
 const float MAG_DECLINATION_DEG = 3.9f; //the compass points to magnetic north and the sun math uses true noth so magentic north is 3.9east of true north so we add 3.9deg
 
 
