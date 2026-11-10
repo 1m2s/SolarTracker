@@ -5,6 +5,12 @@
 static const uint32_t ERROR_BLINK_MS = 200uL;
 static const uint32_t AUTO_BLINK_MS  = 1000uL;
 static const float    START_AZIMUTH_DEG = 180.0f;
+static const uint32_t TURN_START_MS  = 500uL;
+
+static bool startupBusy(const Controller &controller)
+{
+    return (controller.startup != STARTUP_WAITING) && (controller.startup != STARTUP_DONE);
+}
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
 {
@@ -31,6 +37,9 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
     controller.sunAzimuthDeg   = 0.0f;
     controller.sunElevationDeg = 0.0f;
     controller.sunValid        = false;
+    controller.startup         = STARTUP_WAITING;
+    controller.startupMs       = nowMs;
+    controller.panelDeg        = 0.0f;
 }
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
@@ -104,6 +113,9 @@ bool ctrlLedOn(const Controller &controller, uint32_t nowMs)
     if (controller.error || (controller.fault != FAULT_NONE) || controller.compassFailed) {
         return (nowMs / ERROR_BLINK_MS) % 2u == 0u;
     }
+    if (startupBusy(controller)) {
+        return false;
+    }
     if (controller.mode == MODE_MATLAB) {
         return true;
     }
@@ -115,7 +127,8 @@ bool ctrlStatusDue(Controller &controller, uint32_t nowMs)
     if (controller.fault != FAULT_NONE) {
         return false;
     }
-    uint32_t intervalMs = controller.imuKnown ? COMPASS_CHECK_MS : STATUS_RETRY_MS;
+    bool fastAsk = !controller.imuKnown || (controller.startup == STARTUP_TURNING);
+    uint32_t intervalMs = fastAsk ? STATUS_RETRY_MS : COMPASS_CHECK_MS;
     if (!controller.askNow && !isDue(nowMs, controller.lastStatusMs, intervalMs)) {
         return false;
     }
@@ -157,7 +170,7 @@ StatusResult ctrlStatus(Controller &controller, bool answered, uint8_t status, u
 
 bool ctrlBlocked(const Controller &controller)
 {
-    return !controller.imuKnown || (controller.fault != FAULT_NONE);
+    return !controller.imuKnown || (controller.fault != FAULT_NONE) || startupBusy(controller);
 }
 
 CompassResult ctrlCompassRead(Controller &controller, bool readOk, float headingDeg)
@@ -227,4 +240,86 @@ bool ctrlResendAllowed(const Controller &controller)
     return controller.imuKnown && controller.imuSwitchOn
         && (controller.fault == FAULT_NONE) && controller.sunValid
         && ctrlCompassUsable(controller) && !controller.error;
+}
+
+StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs)
+{
+    if (controller.fault != FAULT_NONE) {
+        return STEP_NONE;
+    }
+
+    switch (controller.startup) {
+    case STARTUP_WAITING:
+        if (!controller.imuKnown) {
+            return STEP_NONE;
+        }
+        if (!controller.imuSwitchOn) {
+            controller.startup = STARTUP_DONE;
+            return STEP_DONE;
+        }
+        controller.startup   = STARTUP_SETTLING;
+        controller.startupMs = nowMs;
+        return STEP_SETTLE;
+
+    case STARTUP_SETTLING:
+        if (!isDue(nowMs, controller.startupMs, ALIGN_SETTLE_MS)) {
+            return STEP_NONE;
+        }
+        controller.startup   = STARTUP_MEASURING;
+        controller.startupMs = nowMs;
+        return STEP_START_MEASURE;
+
+    case STARTUP_MEASURING:
+        if (!isDue(nowMs, controller.startupMs, ALIGN_MEASURE_MS)) {
+            return STEP_READ;
+        }
+        controller.startup = STARTUP_AIMING;
+        return STEP_AIM;
+
+    case STARTUP_HOLDING:
+        if (!isDue(nowMs, controller.startupMs, ALIGN_HOLD_MS)) {
+            return STEP_NONE;
+        }
+        controller.startup = STARTUP_DONE;
+        controller.runNow  = true;
+        return STEP_DONE;
+
+    default:
+        return STEP_NONE;
+    }
+}
+
+ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs)
+{
+    if ((controller.startup != STARTUP_AIMING) || (controller.fault != FAULT_NONE)) {
+        return controller.fault;
+    }
+    if (!averageOk) {
+        controller.fault = FAULT_COMPASS;
+        return controller.fault;
+    }
+    if (!southOk) {
+        controller.fault = FAULT_NOT_SOUTH;
+        return controller.fault;
+    }
+    controller.panelDeg  = panelDeg;
+    controller.startup   = STARTUP_TURNING;
+    controller.startupMs = nowMs;
+    return FAULT_NONE;
+}
+
+bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs)
+{
+    if ((controller.startup != STARTUP_TURNING) || (controller.fault != FAULT_NONE)) {
+        return false;
+    }
+    if (!isDue(nowMs, controller.startupMs, TURN_START_MS)) {
+        return false;
+    }
+    if ((status & STATUS_MOVING) != 0u) {
+        return false;
+    }
+    controller.startup   = STARTUP_HOLDING;
+    controller.startupMs = nowMs;
+    return true;
 }

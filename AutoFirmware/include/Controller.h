@@ -12,7 +12,9 @@ enum Mode : uint8_t {
 enum ImuFault : uint8_t {
     FAULT_NONE         = 0,
     FAULT_NO_ANSWER    = 1,
-    FAULT_SWITCH_MOVED = 2
+    FAULT_SWITCH_MOVED = 2,
+    FAULT_COMPASS      = 3,
+    FAULT_NOT_SOUTH    = 4
 };
 
 enum StatusResult : uint8_t {
@@ -32,30 +34,52 @@ enum CompassResult : uint8_t {
     COMPASS_RECOVERED    = 4
 };
 
+enum StartupState : uint8_t {
+    STARTUP_WAITING   = 0,
+    STARTUP_SETTLING  = 1,
+    STARTUP_MEASURING = 2,
+    STARTUP_AIMING    = 3,
+    STARTUP_TURNING   = 4,
+    STARTUP_HOLDING   = 5,
+    STARTUP_DONE      = 6
+};
+
+enum StartupStep : uint8_t {
+    STEP_NONE          = 0,
+    STEP_SETTLE        = 1,
+    STEP_START_MEASURE = 2,
+    STEP_READ          = 3,
+    STEP_AIM           = 4,
+    STEP_DONE          = 5
+};
+
 struct Controller {
-    Mode     mode;
-    bool     error;
-    bool     runNow;
-    uint32_t lastCycleMs;
-    bool     lastSwitchOpen;
-    uint32_t switchChangedMs;
-    uint32_t lastMatlabMs;
-    bool     timedOut;
-    bool     imuKnown;
-    bool     imuSwitchOn;
-    ImuFault fault;
-    uint32_t startMs;
-    uint32_t lastStatusMs;
-    bool     askNow;
-    uint8_t  badReads;
-    uint8_t  goodReads;
-    bool     compassFailed;
-    bool     hasHeading;
-    float    headingDeg;
-    float    lastSentDeg;
-    float    sunAzimuthDeg;
-    float    sunElevationDeg;
-    bool     sunValid;
+    Mode         mode;
+    bool         error;
+    bool         runNow;
+    uint32_t     lastCycleMs;
+    bool         lastSwitchOpen;
+    uint32_t     switchChangedMs;
+    uint32_t     lastMatlabMs;
+    bool         timedOut;
+    bool         imuKnown;
+    bool         imuSwitchOn;
+    ImuFault     fault;
+    uint32_t     startMs;
+    uint32_t     lastStatusMs;
+    bool         askNow;
+    uint8_t      badReads;
+    uint8_t      goodReads;
+    bool         compassFailed;
+    bool         hasHeading;
+    float        headingDeg;
+    float        lastSentDeg;
+    float        sunAzimuthDeg;
+    float        sunElevationDeg;
+    bool         sunValid;
+    StartupState startup;
+    uint32_t     startupMs;
+    float        panelDeg;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -89,5 +113,11 @@ void ctrlSendDone(Controller &controller, uint32_t nowMs, float sentAzimuthDeg, 
 bool ctrlReadCompass(const Controller &controller, uint8_t status);
 
 bool ctrlResendAllowed(const Controller &controller);
+
+StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs);
+
+ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs);
+
+bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs);
 
 #endif
