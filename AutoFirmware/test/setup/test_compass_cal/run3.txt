@@ -1,4 +1,4 @@
-Collected 17 tests (hardware/test_i2c_fullscan, hardware/test_i2c_scan, hardware/test_imu_id, hardware/test_imu_switch, hardware/test_rtc, logic/test_heading, logic/test_isDue, logic/test_ledPattern, logic/test_lineReader, logic/test_parseAngles, logic/test_sonnenstand, logic/test_targetBytes, logic/test_toUint8, setup/test_compass, setup/test_compass_cal, setup/test_i2c_link, setup/test_rtc_set)
+Collected 21 tests (hardware/test_i2c_fullscan, hardware/test_i2c_scan, hardware/test_imu_id, hardware/test_imu_switch, hardware/test_rtc, logic/test_clockWatch, logic/test_controller, logic/test_correction, logic/test_heading, logic/test_isDue, logic/test_lineReader, logic/test_parseAngles, logic/test_sunPosition, logic/test_targetBytes, logic/test_toUint8, setup/test_compass, setup/test_compass_cal, setup/test_i2c_link, setup/test_panel_offset, setup/test_rtc_set, setup/test_status_moving)
 
 Processing setup/test_compass_cal in nanosetup environment
 --------------------------------------------------------------------------------
@@ -8,169 +8,169 @@ Building & Uploading...
 Testing...
 If you don't see any output for the first 10 secs, please reset board (press reset button)
 
-test/setup/test_compass_cal/test_main.cpp:135:test_wake_up:PASS
-test/setup/test_compass_cal/test_main.cpp:99:test_record_half_circle:INFO: Arrow on the -90 deg mark. Turning starts in 3 s
-test/setup/test_compass_cal/test_main.cpp:101:test_record_half_circle:INFO: TURN NOW: slowly to the +90 deg mark, 30 s
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -8 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 60 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -8 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 60 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 58 19
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -8 58 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 59 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -9 59 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -8 59 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -8 60 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -8 60 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -5 61 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -6 61 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -4 61 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -3 62 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -3 62 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -2 63 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL -1 63 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 0 63 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 0 64 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 0 63 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 1 64 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 0 62 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 2 64 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 3 64 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 3 63 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 4 64 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 4 63 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 4 63 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 5 63 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 6 64 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 6 63 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 7 63 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 7 64 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 9 61 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 10 62 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 11 61 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 11 60 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 11 61 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 11 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 60 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 58 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 60 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 14 59 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 14 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 13 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 14 59 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 16 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 14 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 14 57 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 16 57 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 15 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 15 57 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 15 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 14 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 15 57 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 16 56 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 16 58 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 17 56 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 17 56 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 18 55 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 19 55 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 20 54 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 21 54 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 21 52 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 52 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 52 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 51 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 50 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 48 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 46 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 25 44 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 43 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 25 41 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 39 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 39 20
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 36 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 39 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 36 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 36 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 36 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 24 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 38 21
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 36 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 23
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 22 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 22
-test/setup/test_compass_cal/test_main.cpp:122:test_record_half_circle:INFO: CAL 23 37 21
-test/setup/test_compass_cal/test_main.cpp:125:test_record_half_circle:INFO: STOP turning. Now run fit_compass.py on the saved output.
-test/setup/test_compass_cal/test_main.cpp:136:test_record_half_circle:PASS
+test/setup/test_compass_cal/test_main.cpp:73:test_wake_up:PASS
+test/setup/test_compass_cal/test_main.cpp:44:test_record_half_circle:INFO: Hold still on the start mark. Turning starts in 3 s
+test/setup/test_compass_cal/test_main.cpp:46:test_record_half_circle:INFO: TURN NOW: exactly 180 deg in about 25 s, then hold still
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 66 276 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 69 277 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 64 278 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 64 277 120
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 68 277 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 63 280 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 65 277 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 68 281 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 63 280 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 65 279 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 66 274 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 76 273 123
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 83 267 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 86 265 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 92 264 120
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 97 256 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 98 254 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 97 252 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 103 252 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 102 251 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 103 251 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 102 251 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 109 246 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 112 245 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 118 238 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 121 233 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 121 228 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 125 227 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 127 220 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 132 223 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 133 216 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 134 213 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 137 209 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 141 202 109
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 141 202 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 140 198 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 145 195 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 148 193 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 147 182 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 148 186 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 150 183 109
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 152 170 109
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 151 171 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 157 165 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 157 163 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 159 161 108
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 158 154 107
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 158 148 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 157 145 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 160 144 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 165 134 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 160 136 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 162 129 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 160 122 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 163 117 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 158 110 109
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 156 112 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 152 104 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 155 101 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 146 96 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 146 94 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 144 87 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 138 83 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 142 81 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 136 82 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 138 82 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 142 83 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 140 83 108
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 140 85 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 143 84 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 139 83 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 138 78 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 135 78 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 126 73 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 122 68 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 112 68 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 111 64 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 109 64 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 102 63 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 93 61 109
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 89 59 108
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 69 59 107
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 62 60 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 53 62 103
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 44 61 107
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 37 61 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 29 67 107
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 24 67 109
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 20 67 110
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 12 71 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 7 70 111
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL 3 73 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -4 75 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -3 76 112
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -14 79 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -13 83 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -16 81 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -18 84 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -20 87 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 86 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -26 86 122
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -25 89 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -23 86 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 89 120
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -23 88 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 86 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -20 87 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 86 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 87 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -19 86 120
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -18 85 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -24 87 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -19 87 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -25 84 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -19 87 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -17 88 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 85 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -17 82 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 83 113
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -24 83 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -27 84 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -20 85 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -20 87 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -25 88 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -23 87 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 85 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -19 89 120
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -25 90 121
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -23 85 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 88 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 84 120
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 84 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -18 84 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -24 85 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -19 83 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -22 83 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 88 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 85 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -26 86 116
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 83 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -25 87 119
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -20 86 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -24 88 121
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -23 86 115
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 84 114
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -23 86 118
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -18 87 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -21 83 117
+test/setup/test_compass_cal/test_main.cpp:60:test_record_half_circle:INFO: CAL -24 85 117
+test/setup/test_compass_cal/test_main.cpp:63:test_record_half_circle:INFO: STOP turning. Now run fit_compass.py on the saved output.
+test/setup/test_compass_cal/test_main.cpp:74:test_record_half_circle:PASS
 
 -----------------------
 2 Tests 0 Failures 0 Ignored 
+OK
 
---------- nanosetup:setup/test_compass_cal [PASSED] Took 43.66 seconds ---------
+--------- nanosetup:setup/test_compass_cal [PASSED] Took 43.52 seconds ---------
 
 =================================== SUMMARY ===================================
 Environment    Test                    Status    Duration
 -------------  ----------------------  --------  ------------
-nanosetup      setup/test_compass_cal  PASSED    00:00:43.660
-================== 2 test cases: 2 succeeded in 00:00:43.660 ==================
+nanosetup      setup/test_compass_cal  PASSED    00:00:43.517
+================== 2 test cases: 2 succeeded in 00:00:43.517 ==================
