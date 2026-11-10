@@ -114,9 +114,24 @@ static bool sendSun(float azimuthDeg, float elevationDeg)
         return sendTarget(azimuthDeg, elevationDeg);
     }
 
-    Serial.print(F("  sun="));   Serial.print(azimuthDeg, 1);
-    Serial.print(F("  panel=")); Serial.print(controller.panelDeg, 1);
-    return sendTarget(correctedAzimuth(azimuthDeg, controller.panelDeg), elevationDeg);
+    float   targetDeg     = correctedAzimuth(azimuthDeg, controller.panelDeg);
+    uint8_t azimuthByte   = 0u;
+    uint8_t elevationByte = 0u;
+    bool    parked        = targetBytes(targetDeg, elevationDeg, azimuthByte, elevationByte);
+    if (parked) {
+        (void)alignBytes(correctedAzimuth(SOUTH_DEG, controller.panelDeg), azimuthByte, elevationByte);
+    }
+
+    Serial.print(F("  sun="));    Serial.print(azimuthDeg, 1);
+    Serial.print(F("  el="));     Serial.print(elevationDeg, 1);
+    Serial.print(F("  panel="));  Serial.print(controller.panelDeg, 1);
+    Serial.print(F("  az="));     Serial.print(targetDeg, 1);
+    Serial.print(F("  azByte=")); Serial.print(azimuthByte);
+    Serial.print(F("  elByte=")); Serial.print(elevationByte);
+    if (parked) {
+        Serial.print(F("  PARK south"));
+    }
+    return writeTarget(azimuthByte, elevationByte);
 }
 
 static void printMode(void)
