@@ -81,6 +81,51 @@ void test_outside_window_parks(void)
     TEST_ASSERT_FALSE(targetBytes(310.0f, 10.0f, azimuthByte, elevationByte));
 }
 
+void test_align_south_target(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_FALSE(alignBytes(180.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
+    TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
+}
+
+void test_align_outdoor_position_2(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_FALSE(alignBytes(153.5f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(77, azimuthByte);
+    TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
+}
+
+void test_align_safe_range_edges(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_FALSE(alignBytes(50.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(25, azimuthByte);
+    TEST_ASSERT_FALSE(alignBytes(310.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(155, azimuthByte);
+}
+
+void test_align_outside_range_parks(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_TRUE(alignBytes(49.9f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
+    TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
+    TEST_ASSERT_TRUE(alignBytes(310.1f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
+    TEST_ASSERT_TRUE(alignBytes(330.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
+}
+
+void test_align_nan_parks(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_TRUE(alignBytes(NAN, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
+    TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
+}
+
 #ifndef ARDUINO
 void test_year_scan(void)
 {
@@ -121,6 +166,11 @@ int runAllTests(void)
     RUN_TEST(test_elevation_zero_parks);
     RUN_TEST(test_nan_parks);
     RUN_TEST(test_outside_window_parks);
+    RUN_TEST(test_align_south_target);
+    RUN_TEST(test_align_outdoor_position_2);
+    RUN_TEST(test_align_safe_range_edges);
+    RUN_TEST(test_align_outside_range_parks);
+    RUN_TEST(test_align_nan_parks);
 #ifndef ARDUINO
     RUN_TEST(test_year_scan);
 #endif
