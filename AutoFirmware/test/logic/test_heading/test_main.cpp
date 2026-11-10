@@ -67,7 +67,7 @@ float rawRadius(int16_t magRawX, int16_t magRawY)
 void test_centre_goes_to_zero(void)
 {
     float magX, magY, magZ;
-    magCalibrated(7, 48, 0, magX, magY, magZ);
+    magCalibrated(20, 183, 0, magX, magY, magZ);
     TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, magX);
     TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, magY);
 }
@@ -76,21 +76,21 @@ void test_z_unchanged(void)
 {
     float magX, magY, magZ;
     magCalibrated(0, 0, 0, magX, magY, magZ);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 7.0f, magZ);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 28.0f, magZ);
     magCalibrated(0, 0, -4096, magX, magY, magZ);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, -1193.0f, magZ);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, -1172.0f, magZ);
 }
 
 void test_real_half_turn(void)
 {
-    TEST_ASSERT_TRUE(headingDiff(rawHeading(23, 37), rawHeading(-9, 58)) > 175.0f);
+    TEST_ASSERT_TRUE(headingDiff(rawHeading(-31, 91), rawHeading(67, 277)) > 175.0f);
 }
 
 void test_real_points_on_a_circle(void)
 {
-    const int16_t points[5][2] = { {23, 38}, {23, 47}, {17, 57}, {6, 63}, {-9, 58} };
+    const int16_t points[6][2] = { {-31, 91}, {67, 277}, {-120, 257}, {-24, 87}, {70, 274}, {-23, 85} };
     float radiusMin = 1e9f, radiusMax = 0;
-    for (int pointIndex = 0; pointIndex < 5; pointIndex++) {
+    for (int pointIndex = 0; pointIndex < 6; pointIndex++) {
         float radius = rawRadius(points[pointIndex][0], points[pointIndex][1]);
         if (radius < radiusMin) radiusMin = radius;
         if (radius > radiusMax) radiusMax = radius;
