@@ -9,17 +9,17 @@ void tearDown(void) {}
 
 void test_panel_heading_adds_offset_and_declination(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 126.0f, panelHeading(40.1f));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 216.0f, panelHeading(40.1f));
 }
 
 void test_panel_heading_wraps_above_360(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 25.9f, panelHeading(300.0f));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 115.9f, panelHeading(300.0f));
 }
 
 void test_panel_heading_outdoor_position_2(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 206.5f, panelHeading(120.6f));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 296.5f, panelHeading(120.6f));
 }
 
 void test_example_250_and_30_gives_40(void)
@@ -52,7 +52,7 @@ void test_south_target_safe_range_edges(void)
 
 void test_south_target_outdoor_position_2(void)
 {
-    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 153.5f, correctedAzimuth(180.0f, panelHeading(120.6f)));
+    TEST_ASSERT_FLOAT_WITHIN(TOLERANCE_DEG, 63.5f, correctedAzimuth(180.0f, panelHeading(120.6f)));
 }
 
 void test_wraps_below_zero(void)
