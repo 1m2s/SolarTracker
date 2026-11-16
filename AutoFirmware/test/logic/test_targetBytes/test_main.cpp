@@ -92,8 +92,8 @@ void test_align_south_target(void)
 void test_align_outdoor_position_2(void)
 {
     uint8_t azimuthByte, elevationByte;
-    TEST_ASSERT_FALSE(alignBytes(153.5f, azimuthByte, elevationByte));
-    TEST_ASSERT_EQUAL_UINT8(77, azimuthByte);
+    TEST_ASSERT_FALSE(alignBytes(63.5f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(32, azimuthByte);
     TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
 }
 
