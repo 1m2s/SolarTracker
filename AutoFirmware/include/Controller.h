@@ -82,6 +82,11 @@ struct Controller {
     StartupState startup;
     uint32_t     startupMs;
     float        panelDeg;
+    bool         motorStill;
+    uint32_t     lastTargetMs;
+    uint8_t      sentAzimuthByte;
+    uint8_t      sentElevationByte;
+    uint32_t     lastTelemetryMs;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -121,5 +126,13 @@ StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs);
 ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs);
 
 bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs);
+
+void ctrlTargetSent(Controller &controller, uint8_t azimuthByte, uint8_t elevationByte, uint32_t nowMs);
+
+bool ctrlLiveCompass(const Controller &controller);
+
+bool ctrlPanelKnown(const Controller &controller);
+
+bool ctrlTelemetryDue(Controller &controller, uint32_t nowMs);
 
 #endif

@@ -6,6 +6,8 @@ static const uint32_t ERROR_BLINK_MS = 200uL;
 static const uint32_t AUTO_BLINK_MS  = 1000uL;
 static const float    START_AZIMUTH_DEG = 180.0f;
 static const uint32_t TURN_START_MS  = 500uL;
+static const uint8_t  START_AZIMUTH_BYTE   = 90u;
+static const uint8_t  START_ELEVATION_BYTE = 0u;
 
 static bool startupBusy(const Controller &controller)
 {
@@ -40,6 +42,11 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
     controller.startup         = STARTUP_WAITING;
     controller.startupMs       = nowMs;
     controller.panelDeg        = 0.0f;
+    controller.motorStill        = false;
+    controller.lastTargetMs      = nowMs;
+    controller.sentAzimuthByte   = START_AZIMUTH_BYTE;
+    controller.sentElevationByte = START_ELEVATION_BYTE;
+    controller.lastTelemetryMs   = nowMs;
 }
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
@@ -144,6 +151,11 @@ StatusResult ctrlStatus(Controller &controller, bool answered, uint8_t status, u
     }
 
     bool switchOn = (status & STATUS_IMU_ON) != 0u;
+
+    if (answered) {
+        bool motorMoving = (status & STATUS_MOVING) != 0u;
+        controller.motorStill = !motorMoving && isDue(nowMs, controller.lastTargetMs, TURN_START_MS);
+    }
 
     if (!controller.imuKnown) {
         if (answered) {
@@ -328,5 +340,38 @@ bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs)
     }
     controller.startup   = STARTUP_HOLDING;
     controller.startupMs = nowMs;
+    return true;
+}
+
+
+void ctrlTargetSent(Controller &controller, uint8_t azimuthByte, uint8_t elevationByte, uint32_t nowMs)
+{
+    if (azimuthByte != controller.sentAzimuthByte) {
+        controller.motorStill   = false;
+        controller.lastTargetMs = nowMs;
+    }
+    controller.sentAzimuthByte   = azimuthByte;
+    controller.sentElevationByte = elevationByte;
+}
+
+bool ctrlLiveCompass(const Controller &controller)
+{
+    return (controller.fault == FAULT_NONE) && (controller.startup == STARTUP_DONE)
+        && controller.motorStill;
+}
+
+bool ctrlPanelKnown(const Controller &controller)
+{
+    bool measured = (controller.startup == STARTUP_TURNING) || (controller.startup == STARTUP_HOLDING)
+                 || (controller.startup == STARTUP_DONE);
+    return controller.imuSwitchOn && measured;
+}
+
+bool ctrlTelemetryDue(Controller &controller, uint32_t nowMs)
+{
+    if (!isDue(nowMs, controller.lastTelemetryMs, TELEMETRY_INTERVAL_MS)) {
+        return false;
+    }
+    controller.lastTelemetryMs = nowMs;
     return true;
 }

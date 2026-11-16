@@ -43,6 +43,9 @@ const uint32_t ALIGN_MEASURE_MS = 10000uL;
 const uint32_t ALIGN_HOLD_MS    = 3000uL;
 const uint32_t ALIGN_TURN_MAX_MS = 20000uL;
 
+const bool SEND_TELEMETRY = true;
+const uint32_t TELEMETRY_INTERVAL_MS = 1000uL;
+
 const uint8_t COMPASS_FAIL_READS    = 3u; //3bad compass readings in a row then compassfailed and park (Controller.cpp185,191)
 const uint8_t COMPASS_RECOVER_READS = 3u; //3good readings in arow then it recovers and tracking continues(Controller.cpp171,177)
 
