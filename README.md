@@ -1,6 +1,6 @@
 # SolarTracker
 
-This project extends an existing RWU solar tracker that was controlled through MATLAB with the MATLAB Support Package for Arduino Hardware. The left Arduino Nano now runs its own firmware: it can track the sun on its own (AUTO, no computer needed) or take the sun angle from MATLAB over USB (MATLAB mode). With the IMU switch on AN, a compass corrects the panel when the base is turned. Firmware is developed with VS Code and PlatformIO.
+This project extends an existing RWU solar tracker that was controlled through MATLAB with the MATLAB Support Package for Arduino Hardware. The left Arduino Nano now runs its own firmware: it can track the sun on its own (AUTO, no computer needed) or take the sun angle from MATLAB over USB (MATLAB mode). With the IMU switch on AN, the compass is read once at power-on and the panel turns to South by itself. Firmware is developed with VS Code and PlatformIO.
 
 **How to use the tracker:** [`AutoFirmware/HowToOperate.md`](AutoFirmware/HowToOperate.md)
 
