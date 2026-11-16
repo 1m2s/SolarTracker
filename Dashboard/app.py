@@ -2,6 +2,8 @@ import time
 
 from nicegui import app, ui
 
+import angles
+import compass
 import link
 import telemetry
 
@@ -15,14 +17,21 @@ def index() -> None:
     ui.label('Solar tracker dashboard').classes('text-2xl font-bold')
     status = ui.label()
 
-    ui.label('Values (grey = old or never received)').classes('font-bold')
-    value_labels = {}
-    with ui.row():
-        for key in KEYS:
-            value_labels[key] = ui.label()
+    with ui.row().classes('w-full no-wrap items-start'):
+        with ui.column().classes('w-80 shrink-0'):
+            ui.label('Compass').classes('font-bold')
+            compass_view = ui.html(compass.draw(None, None, None, None, None, False), sanitize=False)
+            moved_warning = ui.label().classes('font-bold text-red-700')
 
-    ui.label('Telemetry lines').classes('font-bold')
-    telemetry_box = ui.label().classes('w-full h-24 p-2 border rounded font-mono text-xs whitespace-pre overflow-auto')
+        with ui.column().classes('grow min-w-0'):
+            ui.label('Values (grey = old or never received)').classes('font-bold')
+            value_labels = {}
+            with ui.row():
+                for key in KEYS:
+                    value_labels[key] = ui.label()
+
+            ui.label('Telemetry lines').classes('font-bold')
+            telemetry_box = ui.label().classes('w-full h-24 p-2 border rounded font-mono text-xs whitespace-pre overflow-auto')
 
     ui.label('Messages').classes('font-bold')
     log = ui.log(max_lines=200).classes('w-full h-96 font-mono text-xs')
@@ -36,6 +45,25 @@ def index() -> None:
             status.text = 'Bridge: not connected (start bridge.py)'
 
         now = time.monotonic()
+        live = telemetry.value('ST', now) is not None
+
+        def read(key: str):
+            if live:
+                return telemetry.value(key, now)
+            return telemetry.last_value(key)
+
+        power_on = read('PAN')
+        heading = read('HDG')
+        panel = angles.panel_direction(read('IMU'), power_on, read('AZ'))
+        compass_view.set_content(compass.draw(panel, read('SUN'), read('SEL'), power_on, heading, live))
+
+        moved_warning.text = ''
+        if live and heading is not None and power_on is not None:
+            moved_by = angles.difference(heading, power_on)
+            if abs(moved_by) > angles.MOVED_DEG:
+                moved_warning.text = (f'⚠ The compass reads {moved_by:+.1f}° from power-on. '
+                                      'Was the tracker moved? Power-cycle to align again.')
+
         for key in KEYS:
             label = value_labels[key]
             current = telemetry.value(key, now)

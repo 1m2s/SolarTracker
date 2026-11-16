@@ -25,7 +25,9 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | `link.py` | Reads the Nano's lines from the bridge in the background and keeps the latest ones. |
 | `telemetry.py` | Turns a `T:` line into values and keeps the latest value of every key with the time it arrived. |
 | `app.py` | The page in the browser. Only reads from `link.py` and `telemetry.py`, never from the serial port. |
-| `test_telemetry.py` | Tests for `telemetry.py`. |
+| `angles.py` | Angle maths: the direction the panel faces now, and the difference between two directions. |
+| `compass.py` | Draws the compass as an SVG picture. |
+| `test_*.py` | Tests for the file of the same name. |
 
 ## Tests
 
@@ -35,7 +37,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say `17 passed`.
+The last line should say that all tests passed, for example `33 passed`.
 
 ## Telemetry line
 
