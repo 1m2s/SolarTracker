@@ -1,9 +1,9 @@
 #ifndef CORRECTION_H
 #define CORRECTION_H
 
-float arrowHeading(float sensorHeadingDeg);
+float panelHeading(float sensorHeadingDeg);
 
-float correctedAzimuth(float sunAzimuthDeg, float arrowHeadingDeg);
+float correctedAzimuth(float sunAzimuthDeg, float panelHeadingDeg);
 
 float edgeRule(float lastSentDeg, float newDeg);
 

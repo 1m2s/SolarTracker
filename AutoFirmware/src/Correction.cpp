@@ -18,14 +18,14 @@ static float wrapDeg(float angleDeg)
     return wrappedDeg;
 }
 
-float arrowHeading(float sensorHeadingDeg)
+float panelHeading(float sensorHeadingDeg)
 {
-    return wrapDeg(sensorHeadingDeg + IMU_TO_ARROW_DEG + MAG_DECLINATION_DEG);
+    return wrapDeg(sensorHeadingDeg + IMU_TO_PANEL_DEG + MAG_DECLINATION_DEG);
 }
 
-float correctedAzimuth(float sunAzimuthDeg, float arrowHeadingDeg)
+float correctedAzimuth(float sunAzimuthDeg, float panelHeadingDeg)
 {
-    return wrapDeg(sunAzimuthDeg - arrowHeadingDeg + HALF_TURN_DEG);
+    return wrapDeg(sunAzimuthDeg - panelHeadingDeg + HALF_TURN_DEG);
 }
 
 float edgeRule(float lastSentDeg, float newDeg)

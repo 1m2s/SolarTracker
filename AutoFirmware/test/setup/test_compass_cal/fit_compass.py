@@ -18,7 +18,7 @@ import sys
 
 MAG_SCALE = 1200.0 / 4096.0    # same as Heading.cpp
 STILL = 10                     # lines at the start and at the end that must be still
-MAX_STILL_SPREAD = 4           # raw units: more -> the tracker moved while it should be still
+MAX_STILL_SPREAD = 16          # raw units: more -> the tracker moved while it should be still
 GOOD_TURN = (175.0, 185.0)     # a 180 deg turn must read inside this after the correction
 MAX_RADIUS_SPREAD = 20.0       # percent: more -> the oval correction did not make a circle
 

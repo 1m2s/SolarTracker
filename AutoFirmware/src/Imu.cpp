@@ -19,7 +19,7 @@ static const uint8_t MAG_ID          = 0x48u;
 static const uint8_t CLOCK_FROM_GYRO = 0x01u;
 static const uint8_t ACCEL_RANGE_2G  = 0x00u;
 static const uint8_t BYPASS_ON       = 0x02u;
-static const uint8_t MAG_MEASURE_ONE = 0x01u;
+static const uint8_t MAG_MEASURE_ONE = 0x11u;
 static const uint8_t MAG_OVERFLOW    = 0x08u;
 
 static const uint8_t ACCEL_BYTES     = 4u;

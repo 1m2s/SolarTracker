@@ -6,7 +6,7 @@ All commands run inside `AutoFirmware/`.
 
 | Folder | What it checks | Needs | Runs in CI |
 |---|---|---|---|
-| `logic/` | Sun-position math and byte conversion vs. MATLAB, switch debounce, AUTO timing, MATLAB timeout and LED pattern (`test_controller`), 30 s timer across the millis() wrap (`test_isDue`), MATLAB line parser (`test_parseAngles`), collecting USB characters into lines (`test_lineReader`), compass heading (`test_heading`), compass correction, edge rule and 6° re-send rule (`test_correction`) | Nothing | ✅ |
+| `logic/` | Sun-position math and byte conversion vs. MATLAB, south target for the startup alignment (`test_targetBytes`), switch debounce, AUTO timing, MATLAB timeout and LED pattern (`test_controller`), startup sequence: settle, measure, turn, hold and its faults (`test_startup`), averaging the compass reads (`test_imuAverage`), 30 s timer across the millis() wrap (`test_isDue`), MATLAB line parser (`test_parseAngles`), collecting USB characters into lines (`test_lineReader`), compass heading (`test_heading`), panel heading (mounting offset + declination), compass correction, edge rule and 6° re-send rule (`test_correction`) | Nothing | ✅ |
 | `hardware/` | Real tracker, **read-only** | Tracker on, USB to left Nano | ❌ |
 | `setup/` | Tools that **write** to hardware | Tracker on, USB to left Nano | ❌ |
 
@@ -54,4 +54,5 @@ cppcheck --enable=warning,performance,portability --std=c++11 --language=c++ -Ii
 | ⚠️ Compass live for 20 s (writes temporary IMU settings, nothing moves; turn the platform by hand) | `pio test -e nanosetup -f setup/test_compass -v` |
 | ⚠️ Compass calibration run: exact 180° turn, table edge to table edge (do it 3 times: run1, run2, run3) | `pio test -e nanosetup -f setup/test_compass_cal -v \| tee test/setup/test_compass_cal/run1.txt` |
 | Compute the calibration from the 3 runs (prints the numbers for `include/config/Calibration.h`) | `~/.platformio/penv/bin/python test/setup/test_compass_cal/fit_compass.py test/setup/test_compass_cal/run1.txt test/setup/test_compass_cal/run2.txt test/setup/test_compass_cal/run3.txt` |
+| ⚠️ Panel offset: sensor heading averaged over 20 s (writes temporary IMU settings, nothing moves; hands off; results only with `-v`) | `pio test -e nanosetup -f setup/test_panel_offset -v` |
 | Make MATLAB reference values | MATLAB: `cd test/logic/test_sunPosition`, then `generate_reference` |

@@ -19,10 +19,15 @@ uint8_t toUint8(float value) //turn any float into a byte safely(0..255)
     return (uint8_t)roundf(value);//cast to uint8_t after rounding to nearest whole number
 }
 
+static bool azimuthSafe(float azimuthDeg)
+{
+    return azimuthDeg >= AZIMUTH_SAFE_MIN_DEG && azimuthDeg <= AZIMUTH_SAFE_MAX_DEG; //(&&)=>AND operator
+}
+
 bool targetBytes(float azimuthDeg, float elevationDeg, uint8_t &azimuthByte, uint8_t &elevationByte)
 {
     bool night  = !(elevationDeg > 0.0f); //true if sun is not above horizon ie 0 or negative elevation and NaN counts as night too 
-    bool unsafe = !(azimuthDeg >= AZIMUTH_SAFE_MIN_DEG && azimuthDeg <= AZIMUTH_SAFE_MAX_DEG); //true if azimuth is outside safe range (&&)=>AND operator
+    bool unsafe = !azimuthSafe(azimuthDeg); //true if azimuth is outside safe range
 
     if (night || unsafe) {
         azimuthByte   = PARK_AZIMUTH_BYTE;
@@ -35,3 +40,14 @@ bool targetBytes(float azimuthDeg, float elevationDeg, uint8_t &azimuthByte, uin
     return false;//we write to both caller variable the deg/2(because azimuth is 0-360 but one byte can only hold 0-255) but elevation is from (0.90) so it fits in a byte as is, and return false indicating its not parked
 }
 //in words u give it two angles it saftey checks them in, it fills in 2 caller variable bytes and returns if it had to park or not 
+
+bool alignBytes(float azimuthDeg, uint8_t &azimuthByte, uint8_t &elevationByte)
+{
+    elevationByte = PARK_ELEVATION_BYTE;
+    if (!azimuthSafe(azimuthDeg)) {
+        azimuthByte = PARK_AZIMUTH_BYTE;
+        return true;
+    }
+    azimuthByte = toUint8(azimuthDeg / 2.0f);
+    return false;
+}

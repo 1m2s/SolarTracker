@@ -1,0 +1,49 @@
+Collected 21 tests (hardware/test_i2c_fullscan, hardware/test_i2c_scan, hardware/test_imu_id, hardware/test_imu_switch, hardware/test_rtc, logic/test_clockWatch, logic/test_controller, logic/test_correction, logic/test_heading, logic/test_isDue, logic/test_lineReader, logic/test_parseAngles, logic/test_sunPosition, logic/test_targetBytes, logic/test_toUint8, setup/test_compass, setup/test_compass_cal, setup/test_i2c_link, setup/test_panel_offset, setup/test_rtc_set, setup/test_status_moving)
+
+Processing setup/test_panel_offset in nanosetup environment
+--------------------------------------------------------------------------------
+
+Building & Uploading...
+
+Testing...
+If you don't see any output for the first 10 secs, please reset board (press reset button)
+
+test/setup/test_panel_offset/test_main.cpp:109:test_wake_up:PASS
+test/setup/test_panel_offset/test_main.cpp:59:test_average_heading:INFO: Hands off, laptop and phone at least 1 m away. Measuring starts in 2 s
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.9
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.2
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.4
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 120.3
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.2
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 120.6
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 120.8
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.4
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.2
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.9
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.9
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 122.0
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 120.8
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 119.6
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.1
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.4
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 122.1
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 120.5
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 120.6
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: h now = 121.0
+test/setup/test_panel_offset/test_main.cpp:86:test_average_heading:INFO: good reads: 429, bad reads: 0
+test/setup/test_panel_offset/test_main.cpp:98:test_average_heading:INFO: average raw m=-23 85 116  a=993 349
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: field strength xy = 38.1
+test/setup/test_panel_offset/test_main.cpp:27:test_average_heading:INFO: AVERAGE h_sensor = 120.6
+test/setup/test_panel_offset/test_main.cpp:110:test_average_heading:PASS
+
+-----------------------
+2 Tests 0 Failures 0 Ignored 
+OK
+
+-------- nanosetup:setup/test_panel_offset [PASSED] Took 37.39 seconds --------
+
+=================================== SUMMARY ===================================
+Environment    Test                     Status    Duration
+-------------  -----------------------  --------  ------------
+nanosetup      setup/test_panel_offset  PASSED    00:00:37.391
+================== 2 test cases: 2 succeeded in 00:00:37.391 ==================
