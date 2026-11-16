@@ -24,7 +24,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | `bridge.py` | Opens the USB port once and shares it: every line from the Nano goes to all connected programs, every line from a program goes to the Nano (TCP `127.0.0.1:5555`). |
 | `link.py` | Reads the Nano's lines from the bridge in the background and keeps the latest ones. |
 | `telemetry.py` | Turns a `T:` line into values and keeps the latest value of every key with the time it arrived. |
-| `app.py` | The page in the browser. Only reads from `link.py`, never from the serial port. |
+| `app.py` | The page in the browser. Only reads from `link.py` and `telemetry.py`, never from the serial port. |
 | `test_telemetry.py` | Tests for `telemetry.py`. |
 
 ## Tests

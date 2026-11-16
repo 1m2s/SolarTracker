@@ -1,7 +1,9 @@
 """Connection from the dashboard to bridge.py.
 
 A background thread reads the Nano's lines from the bridge and keeps the
-latest ones. The UI only reads from here; it never touches the serial port.
+latest ones. Telemetry lines are handed to telemetry.py and kept apart from
+the normal messages. The UI only reads from here; it never touches the
+serial port.
 """
 
 import socket
@@ -9,31 +11,45 @@ import threading
 import time
 from collections import deque
 
+import telemetry
+
 HOST = '127.0.0.1'
 TCP_PORT = 5555
 RETRY_S = 2.0
 MAX_LINES = 500
+MAX_TELEMETRY_LINES = 5
 
 connected = False
 lines = deque(maxlen=MAX_LINES)
 line_count = 0
+telemetry_lines = deque(maxlen=MAX_TELEMETRY_LINES)
 lock = threading.Lock()
 
 
 def store(line: str) -> None:
-    """Keep one line from the Nano."""
+    """Keep one line from the Nano: telemetry in its own short list, the rest as messages."""
     global line_count
+    is_telemetry = telemetry.update(line, time.monotonic())
     with lock:
-        lines.append(line)
-        line_count += 1
+        if is_telemetry:
+            telemetry_lines.append(line)
+        else:
+            lines.append(line)
+            line_count += 1
 
 
 def lines_since(seen: int) -> tuple[list[str], int]:
-    """Give back the lines that arrived after the first `seen` ones, and the new count."""
+    """Give back the messages that arrived after the first `seen` ones, and the new count."""
     with lock:
         missed = min(line_count - seen, len(lines))
         new_lines = list(lines)[len(lines) - missed:]
         return new_lines, line_count
+
+
+def latest_telemetry_lines() -> list[str]:
+    """Give back the last few telemetry lines, oldest first."""
+    with lock:
+        return list(telemetry_lines)
 
 
 def run() -> None:
