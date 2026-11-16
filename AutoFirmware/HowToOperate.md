@@ -60,7 +60,7 @@ The right Nano has no home position. Wherever the mast stands at power-on is its
 | Hold | 3 s | the panel stays at South |
 | Running | – | normal AUTO or MATLAB mode |
 
-The compass is read **only here**. Every sun angle afterwards is corrected with this one measurement. If the tracker is moved while running, power-cycle it and do the alignment again.
+The compass is used for tracking **only here**. Every sun angle afterwards is corrected with this one measurement. If the tracker is moved while running, power-cycle it and do the alignment again. (The telemetry line reads the compass once per second, but only to show it in the dashboard; it never moves the panel.)
 
 With IMU AUS there is no start sequence; tracking starts right away.
 
@@ -126,6 +126,7 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 | `right Nano not answering -> power-cycle` | Right Nano did not answer within 5 s of the start | Check the right Nano and the I2C wires, power-cycle. |
 | `IMU switch moved -> power-cycle` | IMU switch changed while running | Do the alignment for the new position, power-cycle. |
 | `FAULT   az=180.0000  el=0.0000 ... PARK` | Park after any fault | Read the message above it. |
+| `T:MODE=A ST=6 FLT=0 ...` | Telemetry for the dashboard, once per second | Nothing. The keys are explained in [`../Dashboard/README.md`](../Dashboard/README.md). To switch it off, set `SEND_TELEMETRY = false` in `include/config/Settings.h`. |
 
 ## Stop
 
