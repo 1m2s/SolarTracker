@@ -21,6 +21,10 @@ static const float PARK_ELEVATION_DEG = 0.0f;
 
 static const float SOUTH_DEG = 180.0f;
 
+static const float FULL_TURN_DEG = 360.0f;
+
+static const uint16_t AZIMUTH_DEG_PER_COUNT = 2u;
+
 static const uint32_t MS_PER_S = 1000uL;
 
 static const float ACCEL_COUNTS_PER_G = 16384.0f;
@@ -32,6 +36,10 @@ static Controller controller;
 static LineReader reader;
 static ClockWatch clockWatch = {false, 0uL, 0uL};
 static ImuAverage average;
+
+static bool  hasSun              = false;
+static float lastSunAzimuthDeg   = 0.0f;
+static float lastSunElevationDeg = 0.0f;
 
 static uint8_t writeRegister(uint8_t registerAddr, uint8_t value);
 
@@ -61,6 +69,10 @@ static void startupTick(uint32_t now);
 
 static void askStatus(uint32_t now);
 
+static void printTelemetry(bool hasHeading, float headingDeg);
+
+static void telemetryTick(uint32_t now);
+
 static uint8_t writeRegister(uint8_t registerAddr, uint8_t value)
 {
     Wire.beginTransmission(SLAVE_ADDR);
@@ -82,6 +94,9 @@ static bool writeTarget(uint8_t azimuthByte, uint8_t elevationByte)
         ackOk = (ackAzimuth == 0u) && (ackElevation == 0u);
     }
     Serial.println();
+    if (ackOk) {
+        ctrlTargetSent(controller, azimuthByte, elevationByte, millis());
+    }
     return ackOk;
 }
 
@@ -110,6 +125,10 @@ static void parkForFault(void)
 
 static bool sendSun(float azimuthDeg, float elevationDeg)
 {
+    hasSun              = true;
+    lastSunAzimuthDeg   = azimuthDeg;
+    lastSunElevationDeg = elevationDeg;
+
     if (!controller.imuSwitchOn) {
         return sendTarget(azimuthDeg, elevationDeg);
     }
@@ -360,6 +379,46 @@ static void askStatus(uint32_t now)
         }
     }
 }
+static void printTelemetry(bool hasHeading, float headingDeg)
+{
+    Serial.print(F("T:MODE=")); Serial.print((controller.mode == MODE_AUTO) ? 'A' : 'M');
+    Serial.print(F(" ST="));    Serial.print((uint8_t)controller.startup);
+    Serial.print(F(" FLT="));   Serial.print((uint8_t)controller.fault);
+    if (controller.imuKnown) {
+        Serial.print(F(" IMU=")); Serial.print(controller.imuSwitchOn ? 1 : 0);
+        Serial.print(F(" MOV=")); Serial.print(controller.motorStill ? 0 : 1);
+    }
+    if (hasSun) {
+        Serial.print(F(" SUN=")); Serial.print(lastSunAzimuthDeg, 1);
+        Serial.print(F(" SEL=")); Serial.print(lastSunElevationDeg, 1);
+    }
+    if (ctrlPanelKnown(controller)) {
+        Serial.print(F(" PAN=")); Serial.print(controller.panelDeg, 1);
+    }
+    if (hasHeading) {
+        Serial.print(F(" HDG=")); Serial.print(headingDeg, 1);
+    }
+    Serial.print(F(" AZ=")); Serial.print((uint16_t)controller.sentAzimuthByte * AZIMUTH_DEG_PER_COUNT);
+    Serial.print(F(" EL=")); Serial.println(controller.sentElevationByte);
+}
+
+static void telemetryTick(uint32_t now)
+{
+    if (!SEND_TELEMETRY || !ctrlTelemetryDue(controller, now)) {
+        return;
+    }
+
+    bool  hasHeading = false;
+    float headingDeg = 0.0f;
+    if (SEND_I2C && ctrlLiveCompass(controller)) {
+        ImuRaw raw = {0, 0, 0, 0, 0};
+        if (imuRead(raw)) {
+            headingDeg = panelHeading(headingFromRaw(raw));
+            hasHeading = (headingDeg >= 0.0f) && (headingDeg < FULL_TURN_DEG);
+        }
+    }
+    printTelemetry(hasHeading, headingDeg);
+}
 
 void setup()
 {
@@ -392,6 +451,7 @@ void loop()
     uint32_t now = millis();
 
     if (ctrlSwitch(controller, digitalRead(PIN_MODE) == HIGH, now)) {
+        hasSun = false;
         flushInput();
         printMode();
     }
@@ -411,6 +471,7 @@ void loop()
     if (ctrlMatlabTimedOut(controller, now)) {
         Serial.println(F("MATLAB  timeout -> panel stays"));
     }
-
+    
+    telemetryTick(now);
     digitalWrite(PIN_LED, ctrlLedOn(controller, now) ? HIGH : LOW);
 }
