@@ -31,7 +31,7 @@ The right Nano has no home position. Wherever the mast stands at power-on is its
 
    ![Panel start pose for IMU mode](../images/figure2.png)
 
-4. Place the whole tracker so the panel faces **roughly South**. The exact direction doesn't matter, but not within about 50° of North (the cables can't reach South from there).
+4. Place the whole tracker so the panel faces **roughly South**. The exact direction doesn't matter: the start sequence turns the panel up to half a turn to face South. Roughly South keeps the turns short.
 5. Keep the base level.
 6. Keep magnets, metal and laptops at least 1 m away from the IMU. Best outdoors: indoors the building weakens the magnetic field and the panel can end up tens of degrees away from South. Outdoors it was within about ±2°.
 
@@ -82,7 +82,7 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 
 ## What the tracker does
 
-- **Night and unsafe angles:** if the sun is at or below the horizon, or the needed angle is outside 50°–310°, the panel parks upright:
+- **Night:** if the sun is at or below the horizon, the panel parks upright:
   - IMU AUS: at the start direction (South, as you placed it).
   - IMU AN: at the South found in the start sequence.
 - **Faults:** the panel parks upright at the start direction, the LED blinks fast and tracking stops until a power-cycle.
@@ -111,7 +111,7 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 | `START   done -> running` | Start sequence finished | – |
 | `AUTO    <time>  az=...  el=...  ack=0/0` | IMU AUS: sun angle sent; `ack=0/0` = the right Nano got both bytes | – |
 | `AUTO    <time>  sun=...  el=...  panel=...  az=...  ack=0/0` | IMU AN: sun angle (`sun`) and the corrected angle sent (`az`) | – |
-| `... PARK` / `... PARK south` | Night or angle outside 50°–310° | – |
+| `... PARK` / `... PARK south` | Night | – |
 | `ack=` with numbers other than `0/0` | Right Nano did not get the bytes | Check the I2C wires between the Nanos. |
 | `AUTO    RTC stopped / not valid / frozen -> nothing sent` | Clock problem, nothing sent | Check the RTC wires (D5, D6, D7); set the clock again. |
 | `ignored: switch on AUTO` | A MATLAB line arrived in AUTO | Flip the mode switch to MATLAB. |
