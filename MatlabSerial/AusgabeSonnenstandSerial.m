@@ -77,9 +77,13 @@ end
 %    After 180 s without a line, its LED blinks fast (timeout).
 %    Type "clear s" to free the port for PlatformIO.
 
-% Prints every line the Nano has sent so far
+% Prints every line the Nano has sent so far.
+% Lines starting with "T:" are telemetry for the dashboard and are skipped.
 function printNano(s)
     while s.NumBytesAvailable > 0
-        fprintf("    Nano: %s\n", readline(s));
+        reply = readline(s);
+        if ~startsWith(reply, "T:")
+            fprintf("    Nano: %s\n", reply);
+        end
     end
 end
