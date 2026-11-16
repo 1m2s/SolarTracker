@@ -4,9 +4,9 @@
 static const uint8_t PARK_AZIMUTH_BYTE   = 90u; //right nano reads it as 90*2=180deg=south
 static const uint8_t PARK_ELEVATION_BYTE = 0u; //vertical position
 
-static const float AZIMUTH_SAFE_MIN_DEG = 50.0f;
-static const float AZIMUTH_SAFE_MAX_DEG = 310.0f;
-//safe azimuth range is 50deg to 310 
+static const float AZIMUTH_SAFE_MIN_DEG = 0.0f;
+static const float AZIMUTH_SAFE_MAX_DEG = 360.0f;
+
 
 uint8_t toUint8(float value) //turn any float into a byte safely(0..255)
 {
