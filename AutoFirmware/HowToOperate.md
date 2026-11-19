@@ -121,7 +121,6 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 | `MATLAB  timeout -> panel stays` | No good line for 180 s | Restart the MATLAB script. The panel keeps its position. |
 | `line too long -> ignored` | Serial line too long | Check what is sent. |
 | `START   no good compass reads -> power-cycle` | The compass gave no usable reading | Check the IMU cable, power-cycle. |
-| `START   panel faces north (panel=...), cables can't reach south -> ...` | Tracker was placed facing North | Turn the whole tracker around, power-cycle. |
 | `START   turn not finished -> power-cycle` | The turn to South took longer than 20 s | Check the motor and the right Nano, power-cycle. |
 | `right Nano not answering -> power-cycle` | Right Nano did not answer within 5 s of the start | Check the right Nano and the I2C wires, power-cycle. |
 | `IMU switch moved -> power-cycle` | IMU switch changed while running | Do the alignment for the new position, power-cycle. |

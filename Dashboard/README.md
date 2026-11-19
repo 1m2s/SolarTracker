@@ -38,14 +38,14 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `47 passed`.
+The last line should say that all tests passed, for example `49 passed`.
 
 ## Telemetry line
 
 The left Nano prints one line per second that starts with `T:`. All other lines are the normal messages from `AutoFirmware/HowToOperate.md`.
 
 ```
-T:MODE=A ST=6 FLT=0 IMU=1 MOV=0 SUN=253.7 SEL=-10.4 PAN=303.2 HDG=303.5 AZ=56 EL=0
+T:MODE=A ST=6 FLT=0 ERR=0 IMU=1 MOV=0 SUN=253.7 SEL=-10.4 PAN=303.2 HDG=303.5 AZ=56 EL=0 A0=2712 A1=19
 ```
 
 Pairs of `key=value`, separated by one space. A key without a valid value is left out. The dashboard ignores keys it does not know.
@@ -54,7 +54,8 @@ Pairs of `key=value`, separated by one space. A key without a valid value is lef
 |---|---|---|
 | `MODE` | Mode switch | `A` = AUTO, `M` = MATLAB |
 | `ST` | Start sequence | 0 waiting, 1 settling, 2 measuring, 3 aiming, 4 turning, 5 holding, 6 done |
-| `FLT` | Fault | 0 none, 1 right Nano not answering, 2 IMU switch moved, 3 compass, 4 panel faces north, 5 turn too long |
+| `FLT` | Fault (stays until a power-cycle) | 0 none, 1 right Nano not answering, 2 IMU switch moved, 3 compass, 5 turn too long (4 is not used any more) |
+| `ERR` | Problem that can go away again: clock problem, target not taken by the right Nano, or no MATLAB line for 180 s. The LED blinks fast; the message log says which one. | 1 = yes, 0 = no |
 | `IMU` | IMU switch | 1 = AN, 0 = AUS |
 | `MOV` | Stepper moving | 1 = yes, 0 = no |
 | `SUN` | Sun azimuth, last value calculated (AUTO) or received (MATLAB) | degrees from true north, 1 decimal |
@@ -63,6 +64,8 @@ Pairs of `key=value`, separated by one space. A key without a valid value is lef
 | `HDG` | The same direction measured now (live compass, display only). Left out while the stepper moves, during the start sequence and after a failed read. | degrees from true north, 1 decimal |
 | `AZ` | Azimuth last sent to the right Nano. 180 = the direction at power-on. | degrees, steps of 2 |
 | `EL` | Elevation last sent to the right Nano. 0 = panel upright. | degrees |
+| `A0` | Panel voltage reading from the right Nano (pin A0, voltage divider): sum of 16 readings. Left out while the right Nano has no finished sum, did not answer, or after a fault. | 0 to 16368 |
+| `A1` | Current reading from the right Nano (pin A1, across the 1/3 Ω measuring resistors): sum of 16 readings. Left out like `A0`. | 0 to 16368 |
 
 ### What the dashboard calculates
 
@@ -74,12 +77,12 @@ With IMU AUS the panel was placed facing South by hand, so $\text{panel}_{\text{
 
 If `HDG` and `PAN` differ by more than a few degrees, the tracker was moved after power-on (or something disturbs the compass).
 
+The left Nano asks the right Nano once per second. The right Nano finishes a new sum about every second (about every 2 s while the stepper turns), so a sum can show up twice. Sum ÷ 16 is the average reading, 0 to 1023.
+
 ### Planned keys (right Nano, later)
 
 | Key | Meaning |
 |---|---|
-| `A0` | Raw reading of the voltage divider (0–1023) |
-| `A1` | Raw reading across the 1/3 Ω resistor (0–1023) |
 | `PAZ` | Azimuth the stepper has really reached |
 | `PEL` | Elevation the servo has really reached |
 
