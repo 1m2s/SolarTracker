@@ -349,13 +349,20 @@ static void askStatus(uint32_t now)
         return;
     }
 
-    uint8_t status   = 0u;
-    bool    answered = Wire.requestFrom(SLAVE_ADDR, (uint8_t)1u) == 1u;
+    uint8_t answer[ANSWER_LENGTH] = {0u, 0u, 0u, 0u, 0u};
+    bool    answered = Wire.requestFrom(SLAVE_ADDR, ANSWER_LENGTH) == ANSWER_LENGTH;
     if (answered) {
-        status = (uint8_t)Wire.read();
+        for (uint8_t index = 0u; index < ANSWER_LENGTH; index++) {
+            answer[index] = (uint8_t)Wire.read();
+        }
     }
 
+    uint8_t  status = answer[ANSWER_STATUS];
+    uint16_t sumA0  = ctrlSumFromBytes(answer[ANSWER_A0_LOW], answer[ANSWER_A0_HIGH]);
+    uint16_t sumA1  = ctrlSumFromBytes(answer[ANSWER_A1_LOW], answer[ANSWER_A1_HIGH]);
+
     StatusResult result = ctrlStatus(controller, answered, status, now);
+    ctrlReadings(controller, answered, status, sumA0, sumA1);
     if (result == RESULT_LATCHED) {
         Serial.println(controller.imuSwitchOn ? F("IMU switch AN") : F("IMU switch AUS"));
     } else if (result == RESULT_FAULT) {
@@ -380,6 +387,7 @@ static void printTelemetry(bool hasHeading, float headingDeg)
     Serial.print(F("T:MODE=")); Serial.print((controller.mode == MODE_AUTO) ? 'A' : 'M');
     Serial.print(F(" ST="));    Serial.print((uint8_t)controller.startup);
     Serial.print(F(" FLT="));   Serial.print((uint8_t)controller.fault);
+    Serial.print(F(" ERR="));   Serial.print(controller.error ? 1 : 0);
     if (controller.imuKnown) {
         Serial.print(F(" IMU=")); Serial.print(controller.imuSwitchOn ? 1 : 0);
         Serial.print(F(" MOV=")); Serial.print(controller.motorStill ? 0 : 1);
@@ -395,7 +403,12 @@ static void printTelemetry(bool hasHeading, float headingDeg)
         Serial.print(F(" HDG=")); Serial.print(headingDeg, 1);
     }
     Serial.print(F(" AZ=")); Serial.print((uint16_t)controller.sentAzimuthByte * AZIMUTH_DEG_PER_COUNT);
-    Serial.print(F(" EL=")); Serial.println(controller.sentElevationByte);
+    Serial.print(F(" EL=")); Serial.print(controller.sentElevationByte);
+    if (ctrlReadingsKnown(controller)) {
+        Serial.print(F(" A0=")); Serial.print(controller.sumA0);
+        Serial.print(F(" A1=")); Serial.print(controller.sumA1);
+    }
+    Serial.println();
 }
 
 static void telemetryTick(uint32_t now)
