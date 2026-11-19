@@ -284,10 +284,6 @@ static void aimSouth(uint32_t now)
     ImuFault fault = ctrlStartupMeasured(controller, averageOk, !parked, panelDeg, now);
     if (fault == FAULT_COMPASS) {
         Serial.println(F("START   no good compass reads -> power-cycle"));
-    } else if (fault == FAULT_NOT_SOUTH) {
-        Serial.print(F("START   panel faces north (panel="));
-        Serial.print(panelDeg, 1);
-        Serial.println(F("), cables can't reach south -> turn the tracker around, power-cycle"));
     }
     if (fault != FAULT_NONE) {
         parkForFault();

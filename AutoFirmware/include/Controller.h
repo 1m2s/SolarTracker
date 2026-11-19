@@ -14,7 +14,6 @@ enum ImuFault : uint8_t {
     FAULT_NO_ANSWER    = 1,
     FAULT_SWITCH_MOVED = 2,
     FAULT_COMPASS      = 3,
-    FAULT_NOT_SOUTH    = 4,
     FAULT_TURN_TIMEOUT = 5
 };
 
@@ -123,7 +122,7 @@ bool ctrlResendAllowed(const Controller &controller);
 
 StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs);
 
-ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs);
+ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool aimOk, float panelDeg, uint32_t nowMs);
 
 bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs);
 

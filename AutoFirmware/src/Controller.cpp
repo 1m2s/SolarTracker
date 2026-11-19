@@ -308,17 +308,13 @@ StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs)
     }
 }
 
-ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs)
+ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool aimOk, float panelDeg, uint32_t nowMs)
 {
     if ((controller.startup != STARTUP_AIMING) || (controller.fault != FAULT_NONE)) {
         return controller.fault;
     }
-    if (!averageOk) {
+    if (!averageOk || !aimOk) {
         controller.fault = FAULT_COMPASS;
-        return controller.fault;
-    }
-    if (!southOk) {
-        controller.fault = FAULT_NOT_SOUTH;
         return controller.fault;
     }
     controller.panelDeg  = panelDeg;
