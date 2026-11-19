@@ -8,7 +8,7 @@ import link
 import status
 import telemetry
 
-KEYS = ('MODE', 'ST', 'FLT', 'IMU', 'MOV', 'SUN', 'SEL', 'PAN', 'HDG', 'AZ', 'EL')
+KEYS = ('MODE', 'ST', 'FLT', 'ERR', 'IMU', 'MOV', 'SUN', 'SEL', 'PAN', 'HDG', 'AZ', 'EL', 'A0', 'A1')
 CURRENT_STYLE = 'font-mono text-sm'
 OLD_STYLE = 'font-mono text-sm text-gray-400'
 FAULT_STYLE = 'font-bold text-red-700'

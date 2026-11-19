@@ -2,17 +2,27 @@
 
 import telemetry
 
-FULL_LINE = 'T:MODE=A ST=6 FLT=0 IMU=1 MOV=0 SUN=257.6 SEL=-13.9 PAN=304.6 HDG=304.8 AZ=56 EL=0'
+FULL_LINE = ('T:MODE=A ST=6 FLT=0 ERR=0 IMU=1 MOV=0 SUN=257.6 SEL=-13.9 PAN=304.6 HDG=304.8 '
+             'AZ=56 EL=0 A0=2712 A1=19')
 
 
 def test_full_line_gives_all_values():
     assert telemetry.parse(FULL_LINE) == {
-        'MODE': 'A', 'ST': 6, 'FLT': 0, 'IMU': 1, 'MOV': 0,
+        'MODE': 'A', 'ST': 6, 'FLT': 0, 'ERR': 0, 'IMU': 1, 'MOV': 0,
         'SUN': 257.6, 'SEL': -13.9, 'PAN': 304.6, 'HDG': 304.8,
-        'AZ': 56.0, 'EL': 0.0,
+        'AZ': 56.0, 'EL': 0.0, 'A0': 2712, 'A1': 19,
     }
 
+def test_line_without_the_sums_leaves_them_out():
+    values = telemetry.parse('T:MODE=A ST=6 FLT=0 ERR=1 IMU=1 MOV=0 AZ=56 EL=0')
+    assert values['ERR'] == 1
+    assert 'A0' not in values
+    assert 'A1' not in values
 
+
+def test_sums_are_whole_numbers():
+    assert telemetry.parse('T:A0=0 A1=16368') == {'A0': 0, 'A1': 16368}
+    assert telemetry.parse('T:A0=27.5 A1=x ERR=yes') == {}
 def test_other_lines_are_not_telemetry():
     assert telemetry.parse('PARK south') is None
     assert telemetry.parse('AUTO  az=180.0000  el=0.0000  azByte=90  elByte=0') is None
@@ -31,7 +41,7 @@ def test_missing_keys_are_left_out():
 
 
 def test_unknown_keys_are_ignored():
-    assert telemetry.parse('T:ST=6 A0=512 XYZ=abc EL=40') == {'ST': 6, 'EL': 40.0}
+    assert telemetry.parse('T:ST=6 PAZ=512 XYZ=abc EL=40') == {'ST': 6, 'EL': 40.0}
 
 
 def test_values_that_are_not_numbers_are_dropped():

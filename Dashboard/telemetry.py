@@ -10,7 +10,7 @@ import threading
 
 PREFIX = 'T:'
 MODES = ('A', 'M')
-WHOLE_KEYS = ('ST', 'FLT', 'IMU', 'MOV')
+WHOLE_KEYS = ('ST', 'FLT', 'ERR', 'IMU', 'MOV', 'A0', 'A1')
 DEGREE_KEYS = ('SUN', 'SEL', 'PAN', 'HDG', 'AZ', 'EL')
 MAX_AGE_S = 3.0
 
