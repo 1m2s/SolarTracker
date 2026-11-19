@@ -9,7 +9,7 @@ This project extends an existing RWU solar tracker that was controlled through M
 | Folder | What it is | Runs on |
 |---|---|---|
 | [`AutoFirmware/`](AutoFirmware/) | New firmware: AUTO/MATLAB modes, sun position (port of the MATLAB code), IMU (compass) mode, status LED | Left Nano (`A_MATLAB`) |
-| [`MotorFirmware/`](MotorFirmware/) | Moves the panel (stepper + servo), shows voltage and power, reports the IMU switch and "motor moving" | Right Nano (`A_AIDE`), I2C address `0x19` |
+| [`MotorFirmware/`](MotorFirmware/) | Moves the panel (stepper + servo), shows voltage and power, reports the IMU switch, "motor moving" and the raw voltage and current readings | Right Nano (`A_AIDE`), I2C address `0x19` |
 | [`MatlabSerial/`](MatlabSerial/) | MATLAB script for MATLAB mode (sends the sun angle as text over USB) | Mac |
 | [`CurrentFirmware/`](CurrentFirmware/) | The original firmware and MATLAB scripts, unchanged (reference and rollback) | – |
 | [`images/`](images/) | Pictures used in the docs | – |
