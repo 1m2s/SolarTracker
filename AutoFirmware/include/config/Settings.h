@@ -33,7 +33,7 @@ const uint8_t MAG_SAMPLES = 4u;//each compass reading= 4 measurments averaged fo
 const uint32_t MAG_WAIT_MS = 10uL;//Wait for the compass chip to finish one measurment(Imu.cpp70)
 
 //Controller.cpp 118=>uint32_t intervalMs = controller.imuKnown? COMPASS_CHECK_MS : STATUS_RETRY_MS; here it says if the imu switch is known wait 2s otherwise 250ms
-const uint32_t COMPASS_CHECK_MS = 2000uL;//asks the right nano for the status byte(read the compass if the imu is on) every 2s
+const uint32_t COMPASS_CHECK_MS = 1000uL;//asks the right nano for the status byte(read the compass if the imu is on) every 1s
 const uint32_t STATUS_RETRY_MS  = 250uL; //in the beginning when imu switch position is unkown then ask every 250ms
 
 const uint32_t STARTUP_WAIT_MS  = 5000uL;//if the right nano hasnt answered within 5s of start then flag a error(Controller.cpp141)
