@@ -27,6 +27,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | `app.py` | The page in the browser. Only reads from `link.py` and `telemetry.py`, never from the serial port. |
 | `angles.py` | Angle maths: the direction the panel faces now, and the difference between two directions. |
 | `compass.py` | Draws the compass as an SVG picture. |
+| `status.py` | Turns the codes `MODE`, `IMU`, `ST` and `FLT` into words for the status line, with what to do after a fault. |
 | `test_*.py` | Tests for the file of the same name. |
 
 ## Tests
@@ -37,7 +38,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `33 passed`.
+The last line should say that all tests passed, for example `47 passed`.
 
 ## Telemetry line
 
