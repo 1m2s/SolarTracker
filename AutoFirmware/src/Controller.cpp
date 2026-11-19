@@ -47,6 +47,9 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
     controller.sentAzimuthByte   = START_AZIMUTH_BYTE;
     controller.sentElevationByte = START_ELEVATION_BYTE;
     controller.lastTelemetryMs   = nowMs;
+    controller.readingsValid     = false;
+    controller.sumA0             = 0u;
+    controller.sumA1             = 0u;
 }
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
@@ -370,4 +373,29 @@ bool ctrlTelemetryDue(Controller &controller, uint32_t nowMs)
     }
     controller.lastTelemetryMs = nowMs;
     return true;
+}
+
+uint16_t ctrlSumFromBytes(uint8_t lowByte, uint8_t highByte)
+{
+    return (uint16_t)(((uint16_t)highByte << 8) | (uint16_t)lowByte);
+}
+
+void ctrlReadings(Controller &controller, bool answered, uint8_t status, uint16_t sumA0, uint16_t sumA1)
+{
+    bool ready   = (status & STATUS_READINGS) != 0u;
+    bool inRange = (sumA0 <= READING_SUM_MAX) && (sumA1 <= READING_SUM_MAX);
+
+    controller.readingsValid = answered && ready && inRange;
+    if (controller.readingsValid) {
+        controller.sumA0 = sumA0;
+        controller.sumA1 = sumA1;
+    } else {
+        controller.sumA0 = 0u;
+        controller.sumA1 = 0u;
+    }
+}
+
+bool ctrlReadingsKnown(const Controller &controller)
+{
+    return controller.readingsValid && (controller.fault == FAULT_NONE);
 }

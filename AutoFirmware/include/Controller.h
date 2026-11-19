@@ -86,6 +86,9 @@ struct Controller {
     uint8_t      sentAzimuthByte;
     uint8_t      sentElevationByte;
     uint32_t     lastTelemetryMs;
+    bool         readingsValid;
+    uint16_t     sumA0;
+    uint16_t     sumA1;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -134,4 +137,9 @@ bool ctrlPanelKnown(const Controller &controller);
 
 bool ctrlTelemetryDue(Controller &controller, uint32_t nowMs);
 
+uint16_t ctrlSumFromBytes(uint8_t lowByte, uint8_t highByte);
+
+void ctrlReadings(Controller &controller, bool answered, uint8_t status, uint16_t sumA0, uint16_t sumA1);
+
+bool ctrlReadingsKnown(const Controller &controller);
 #endif
