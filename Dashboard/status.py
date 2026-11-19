@@ -23,7 +23,6 @@ FAULTS = {
     1: ('right Nano not answering', 'Check the right Nano and the I2C wires, then power-cycle.'),
     2: ('IMU switch moved', 'Do the alignment for the new switch position, then power-cycle.'),
     3: ('no usable compass reading', 'Check the IMU cable, then power-cycle.'),
-    4: ('panel faces north', 'Turn the whole tracker around, then power-cycle.'),
     5: ('turn to South took too long', 'Check the motor and the right Nano, then power-cycle.'),
 }
 UNKNOWN_FAULT = ('unknown code', 'Read the messages below, then power-cycle.')

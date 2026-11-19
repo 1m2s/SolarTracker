@@ -26,7 +26,7 @@ def test_missing_and_unknown_values_are_question_marks():
 
 
 def test_a_fault_stops_the_start_sequence():
-    assert status.state_text('A', 1, 3, 4).endswith('Start sequence: stopped while aiming at South')
+    assert status.state_text('A', 1, 3, 3).endswith('Start sequence: stopped while aiming at South')
     assert status.state_text('A', None, 0, 1).endswith('Start sequence: stopped while waiting for the right Nano')
 
 
@@ -49,12 +49,13 @@ def test_fault_text():
     assert status.fault_text(0) == 'Fault: none'
     assert status.fault_text(None) == 'Fault: ?'
     assert status.fault_text(1) == 'Fault 1: right Nano not answering'
-    assert status.fault_text(4) == 'Fault 4: panel faces north'
+    assert status.fault_text(5) == 'Fault 5: turn to South took too long'
+    assert status.fault_text(4) == 'Fault 4: unknown code'
     assert status.fault_text(9) == 'Fault 9: unknown code'
 
 
 def test_every_fault_of_the_firmware_has_a_name_and_an_action():
-    for fault in range(1, 6):
+    for fault in (1, 2, 3, 5):
         name, action = status.FAULTS[fault]
         assert name != ''
         assert action.endswith('power-cycle.')
