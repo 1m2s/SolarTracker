@@ -40,9 +40,6 @@ def index() -> None:
                 for key in KEYS:
                     value_labels[key] = ui.label()
 
-            ui.label('Telemetry lines').classes('font-bold')
-            telemetry_box = ui.label().classes('w-full h-24 p-2 border rounded font-mono text-xs whitespace-pre overflow-auto')
-
     ui.label('Messages').classes('font-bold')
     log = ui.log(max_lines=200).classes('w-full h-96 font-mono text-xs')
     seen = 0
@@ -97,8 +94,6 @@ def index() -> None:
                 last = telemetry.last_value(key)
                 label.text = f'{key}=?' if last is None else f'{key}={last}'
                 label.classes(replace=OLD_STYLE)
-
-        telemetry_box.text = '\n'.join(link.latest_telemetry_lines())
 
         new_lines, seen = link.lines_since(seen)
         for line in new_lines:

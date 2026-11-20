@@ -1,9 +1,8 @@
 """Connection from the dashboard to bridge.py.
 
-A background thread reads the Nano's lines from the bridge and keeps the
-latest ones. Telemetry lines are handed to telemetry.py and kept apart from
-the normal messages. The UI only reads from here; it never touches the
-serial port.
+A background thread reads the Nano's lines from the bridge. Telemetry lines
+are handed to telemetry.py; the normal messages are kept here, latest ones
+only. The UI only reads from here; it never touches the serial port.
 """
 
 import socket
@@ -17,25 +16,21 @@ HOST = '127.0.0.1'
 TCP_PORT = 5555
 RETRY_S = 2.0
 MAX_LINES = 500
-MAX_TELEMETRY_LINES = 5
 
 connected = False
 lines = deque(maxlen=MAX_LINES)
 line_count = 0
-telemetry_lines = deque(maxlen=MAX_TELEMETRY_LINES)
 lock = threading.Lock()
 
 
 def store(line: str) -> None:
-    """Keep one line from the Nano: telemetry in its own short list, the rest as messages."""
+    """Take one line from the Nano: telemetry goes to telemetry.py, the rest is kept as a message."""
     global line_count
-    is_telemetry = telemetry.update(line, time.monotonic())
+    if telemetry.update(line, time.monotonic()):
+        return
     with lock:
-        if is_telemetry:
-            telemetry_lines.append(line)
-        else:
-            lines.append(line)
-            line_count += 1
+        lines.append(line)
+        line_count += 1
 
 
 def lines_since(seen: int) -> tuple[list[str], int]:
@@ -44,12 +39,6 @@ def lines_since(seen: int) -> tuple[list[str], int]:
         missed = min(line_count - seen, len(lines))
         new_lines = list(lines)[len(lines) - missed:]
         return new_lines, line_count
-
-
-def latest_telemetry_lines() -> list[str]:
-    """Give back the last few telemetry lines, oldest first."""
-    with lock:
-        return list(telemetry_lines)
 
 
 def run() -> None:
