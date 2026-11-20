@@ -1,11 +1,12 @@
 """Tracker status in words.
 
-Turns the codes of the telemetry line (MODE, IMU, ST, FLT) into text for the
-page. The fault names and the actions follow AutoFirmware/HowToOperate.md.
+Turns the codes of the telemetry line (MODE, IMU, ST, FLT, ERR) into text for
+the page. The fault names and the actions follow AutoFirmware/HowToOperate.md.
 """
 
 UNKNOWN = '?'
 NO_FAULT = 0
+NO_PROBLEM = 0
 STAGE_DONE = 6
 
 MODES = {'A': 'AUTO', 'M': 'MATLAB'}
@@ -26,6 +27,8 @@ FAULTS = {
     5: ('turn to South took too long', 'Check the motor and the right Nano, then power-cycle.'),
 }
 UNKNOWN_FAULT = ('unknown code', 'Read the messages below, then power-cycle.')
+
+PROBLEM = 'Problem: the panel is not getting new targets. See Messages for the reason.'
 
 POWER_CYCLE = ('Power-cycle: power OFF and unplug the USB cable, do the alignment, then start again '
                '(bridge.py too: it stops when the cable is unplugged).\n'
@@ -70,6 +73,13 @@ def fault_action(fault: int | None) -> str:
         return ''
     _, action = FAULTS.get(fault, UNKNOWN_FAULT)
     return f'What to do: {action}\n{POWER_CYCLE}'
+
+
+def problem_text(error: int | None) -> str:
+    """Give back the problem line for ERR=1, or an empty text if there is no problem or no value."""
+    if error is None or error == NO_PROBLEM:
+        return ''
+    return PROBLEM
 
 
 def moved_text(moved_by: float) -> str:

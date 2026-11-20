@@ -77,7 +77,17 @@ def test_fault_action_says_what_to_do_and_what_a_power_cycle_is():
 def test_fault_action_for_an_unknown_code():
     assert status.fault_action(9).startswith('What to do: Read the messages below, then power-cycle.\n')
 
+def test_problem_text_for_err_1():
+    assert status.problem_text(1) == 'Problem: the panel is not getting new targets. See Messages for the reason.'
 
+
+def test_no_problem_text_for_err_0():
+    assert status.problem_text(0) == ''
+
+
+def test_no_problem_text_without_a_value():
+    assert status.problem_text(None) == ''
+    
 def test_moved_text_shows_the_sign_and_how_to_align_again():
     assert status.moved_text(16.84).startswith('⚠ The compass reads +16.8° from power-on.')
     assert status.moved_text(-7.3).startswith('⚠ The compass reads -7.3° from power-on.')
