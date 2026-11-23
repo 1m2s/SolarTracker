@@ -7,6 +7,7 @@ import compass
 import link
 import status
 import telemetry
+import power
 
 KEYS = ('MODE', 'ST', 'FLT', 'ERR', 'IMU', 'MOV', 'SUN', 'SEL', 'PAN', 'HDG', 'AZ', 'EL', 'A0', 'A1')
 CURRENT_STYLE = 'font-mono text-sm'
@@ -14,7 +15,8 @@ OLD_STYLE = 'font-mono text-sm text-gray-400'
 FAULT_STYLE = 'font-bold text-red-700'
 FAULT_HELP_STYLE = 'text-red-700'
 OLD_TEXT_STYLE = 'text-gray-400'
-
+PANEL_STYLE = 'text-xl font-mono'
+NOTE_STYLE = 'text-sm text-gray-500'
 
 @ui.page('/')
 def index() -> None:
@@ -30,6 +32,13 @@ def index() -> None:
         problem_line = ui.label()
         moved_warning = ui.label().classes(FAULT_STYLE)
 
+    ui.label('Panel').classes('font-bold')
+    with ui.column().classes('gap-1'):
+        with ui.row().classes('gap-8'):
+            volts_label = ui.label()
+            amps_label = ui.label()
+            watts_label = ui.label()
+        ui.label(power.NOISE_NOTE).classes(NOTE_STYLE)
     with ui.row().classes('w-full no-wrap items-start'):
         with ui.column().classes('w-80 shrink-0'):
             ui.label('Compass').classes('font-bold')
@@ -91,6 +100,15 @@ def index() -> None:
             if abs(moved_by) > angles.MOVED_DEG:
                 moved_warning.text = status.moved_text(moved_by)
 
+        panel_volts = power.volts(read('A0'))
+        panel_amps = power.amps(read('A1'))
+        panel_style = PANEL_STYLE if live else f'{PANEL_STYLE} {OLD_TEXT_STYLE}'
+        volts_label.text = power.value_text('U', panel_volts, 1, 'V')
+        amps_label.text = power.value_text('I', panel_amps, 2, 'A')
+        watts_label.text = power.value_text('P', power.watts(panel_volts, panel_amps), 1, 'W')
+        volts_label.classes(replace=panel_style)
+        amps_label.classes(replace=panel_style)
+        watts_label.classes(replace=panel_style)
         for key in KEYS:
             label = value_labels[key]
             current = telemetry.value(key, now)
