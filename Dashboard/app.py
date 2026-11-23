@@ -28,12 +28,13 @@ def index() -> None:
             fault_line = ui.label()
         fault_help = ui.label().classes('whitespace-pre-line')
         problem_line = ui.label()
+        moved_warning = ui.label().classes(FAULT_STYLE)
 
     with ui.row().classes('w-full no-wrap items-start'):
         with ui.column().classes('w-80 shrink-0'):
             ui.label('Compass').classes('font-bold')
             compass_view = ui.html(compass.draw(None, None, None, None, None, False), sanitize=False)
-            moved_warning = ui.label().classes(FAULT_STYLE)
+
 
         with ui.column().classes('grow min-w-0'):
             ui.label('Values (grey = old or never received)').classes('font-bold')
