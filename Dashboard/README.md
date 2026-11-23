@@ -26,6 +26,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | Panel | Panel voltage `U` in volts, current `I` in amps and power `P` in watts, calculated from `A0` and `A1`. A `?` means there is no reading (no finished sum yet, or after a fault). Grey = last known values. With nothing plugged into the USB socket, the small current and power shown are measurement noise. |
 | Compass | Panel direction, sun, compass reading now and direction at power-on. |
 | Values | The raw values of the telemetry line. Grey = old or never received. |
+| Graphs | Panel voltage, current and power over the last 10 minutes, one point per telemetry line. The axes are fixed (0 to 15 V, 0 to 1.5 A, 0 to 15 W), so the noise stays small. A break in a line means there was no reading. The graphs start empty every time `app.py` starts. |
 | Messages | Every line from the Nano except the `T:` lines. The reason for a problem line is here. |
 
 ## Files
@@ -33,13 +34,14 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | File | What it does |
 |---|---|
 | `bridge.py` | Opens the USB port once and shares it: every line from the Nano goes to all connected programs, every line from a program goes to the Nano (TCP `127.0.0.1:5555`). |
-| `link.py` | Reads the Nano's lines from the bridge in the background. Hands the `T:` lines to `telemetry.py` and keeps the latest messages. |
+| `link.py` | Reads the Nano's lines from the bridge in the background. Hands the `T:` lines to `telemetry.py`, adds their panel readings to `history.py` and keeps the latest messages. |
 | `telemetry.py` | Turns a `T:` line into values and keeps the latest value of every key with the time it arrived. |
-| `app.py` | The page in the browser. Only reads from `link.py` and `telemetry.py`, never from the serial port. |
+| `app.py` | The page in the browser. Only reads from `link.py`, `telemetry.py` and `history.py`, never from the serial port. |
 | `angles.py` | Angle maths: the direction the panel faces now, and the difference between two directions. |
 | `compass.py` | Draws the compass as an SVG picture. |
 | `status.py` | Turns the codes `MODE`, `IMU`, `ST`, `FLT` and `ERR` into words for the Status block: the status line, what to do after a fault, the problem line and the moved-warning. |
 | `power.py` | Turns the sums `A0` and `A1` into volts, amps and watts for the Panel block. |
+| `history.py` | Keeps the last 10 minutes of volts, amps and watts for the graphs, one point per telemetry line. In memory only. |
 | `test_*.py` | Tests for the file of the same name. |
 
 ## Tests
@@ -50,7 +52,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `65 passed`.
+The last line should say that all tests passed, for example `76 passed`.
 
 ## Telemetry line
 
