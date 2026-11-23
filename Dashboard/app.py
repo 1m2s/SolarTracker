@@ -9,6 +9,7 @@ import link
 import sideview
 import status
 import telemetry
+import topview
 import power
 
 KEYS = ('MODE', 'ST', 'FLT', 'ERR', 'IMU', 'MOV', 'SUN', 'SEL', 'PAN', 'HDG', 'AZ', 'EL', 'A0', 'A1')
@@ -75,6 +76,9 @@ def index() -> None:
                 with ui.column().classes('gap-1'):
                     ui.label('Side view').classes('font-bold')
                     side_view = ui.html(sideview.draw(None, None, False), sanitize=False)
+                with ui.column().classes('gap-1'):
+                    ui.label('Top view').classes('font-bold')
+                    top_view = ui.html(topview.draw(None, None, None, None, False), sanitize=False)
     ui.label('Graphs (last 10 minutes)').classes('font-bold')
     with ui.row().classes('w-full no-wrap'):
         volts_graph = graph('Panel voltage U in V', VOLTS_TOP, VOLTS_COLOUR)
@@ -123,6 +127,7 @@ def index() -> None:
         panel = angles.panel_direction(read('IMU'), power_on, read('AZ'))
         compass_view.set_content(compass.draw(panel, read('SUN'), read('SEL'), power_on, heading, live))
         side_view.set_content(sideview.draw(read('EL'), read('SEL'), live))
+        top_view.set_content(topview.draw(panel, power_on, read('SUN'), read('SEL'), live))
         moved_warning.text = ''
         if live and heading is not None and power_on is not None:
             moved_by = angles.difference(heading, power_on)
