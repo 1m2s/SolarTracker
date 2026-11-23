@@ -17,17 +17,27 @@ All commands run inside `Dashboard/`.
 
 Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 
+## The page
+
+| Part | What it shows |
+|---|---|
+| Bridge | Whether the dashboard is connected to `bridge.py`. |
+| Status | The place to look when something is wrong. One line with mode, IMU switch and start sequence, and the fault. Three more lines appear in red only when needed: what to do after a fault, the problem line while `ERR=1`, and the warning that the compass reads more than 5° away from power-on. Grey = no telemetry line for 3 s, the text is the last one known. |
+| Compass | Panel direction, sun, compass reading now and direction at power-on. |
+| Values | The raw values of the telemetry line. Grey = old or never received. |
+| Messages | Every line from the Nano except the `T:` lines. The reason for a problem line is here. |
+
 ## Files
 
 | File | What it does |
 |---|---|
 | `bridge.py` | Opens the USB port once and shares it: every line from the Nano goes to all connected programs, every line from a program goes to the Nano (TCP `127.0.0.1:5555`). |
-| `link.py` | Reads the Nano's lines from the bridge in the background and keeps the latest ones. |
+| `link.py` | Reads the Nano's lines from the bridge in the background. Hands the `T:` lines to `telemetry.py` and keeps the latest messages. |
 | `telemetry.py` | Turns a `T:` line into values and keeps the latest value of every key with the time it arrived. |
 | `app.py` | The page in the browser. Only reads from `link.py` and `telemetry.py`, never from the serial port. |
 | `angles.py` | Angle maths: the direction the panel faces now, and the difference between two directions. |
 | `compass.py` | Draws the compass as an SVG picture. |
-| `status.py` | Turns the codes `MODE`, `IMU`, `ST` and `FLT` into words for the status line, with what to do after a fault. |
+| `status.py` | Turns the codes `MODE`, `IMU`, `ST`, `FLT` and `ERR` into words for the Status block: the status line, what to do after a fault, the problem line and the moved-warning. |
 | `test_*.py` | Tests for the file of the same name. |
 
 ## Tests
@@ -38,7 +48,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `49 passed`.
+The last line should say that all tests passed, for example `52 passed`.
 
 ## Telemetry line
 
@@ -55,7 +65,7 @@ Pairs of `key=value`, separated by one space. A key without a valid value is lef
 | `MODE` | Mode switch | `A` = AUTO, `M` = MATLAB |
 | `ST` | Start sequence | 0 waiting, 1 settling, 2 measuring, 3 aiming, 4 turning, 5 holding, 6 done |
 | `FLT` | Fault (stays until a power-cycle) | 0 none, 1 right Nano not answering, 2 IMU switch moved, 3 compass, 5 turn too long (4 is not used any more) |
-| `ERR` | Problem that can go away again: clock problem, target not taken by the right Nano, or no MATLAB line for 180 s. The LED blinks fast; the message log says which one. | 1 = yes, 0 = no |
+| `ERR` | Problem that can go away again: clock problem, target not taken by the right Nano, or no MATLAB line for 180 s. The LED blinks fast; the Status block shows a problem line and the message log says which one. | 1 = yes, 0 = no |
 | `IMU` | IMU switch | 1 = AN, 0 = AUS |
 | `MOV` | Stepper moving | 1 = yes, 0 = no |
 | `SUN` | Sun azimuth, last value calculated (AUTO) or received (MATLAB) | degrees from true north, 1 decimal |
@@ -75,7 +85,7 @@ $$\text{panel}_{\text{now}} = \text{PAN} + (\text{AZ} - 180^\circ)$$
 
 With IMU AUS the panel was placed facing South by hand, so $\text{panel}_{\text{now}} = \text{AZ}$.
 
-If `HDG` and `PAN` differ by more than a few degrees, the tracker was moved after power-on (or something disturbs the compass).
+If `HDG` and `PAN` differ by more than 5°, the tracker was moved after power-on (or something disturbs the compass). The Status block then shows a warning.
 
 The left Nano asks the right Nano once per second. The right Nano finishes a new sum about every second (about every 2 s while the stepper turns), so a sum can show up twice. Sum ÷ 16 is the average reading, 0 to 1023.
 
