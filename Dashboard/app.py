@@ -4,6 +4,7 @@ from nicegui import app, ui
 
 import angles
 import compass
+import history
 import link
 import status
 import telemetry
@@ -17,7 +18,25 @@ FAULT_HELP_STYLE = 'text-red-700'
 OLD_TEXT_STYLE = 'text-gray-400'
 PANEL_STYLE = 'text-xl font-mono'
 NOTE_STYLE = 'text-sm text-gray-500'
-
+GRAPH_STYLE = 'grow basis-0 min-w-0 h-60'
+VOLTS_TOP = 15.0
+AMPS_TOP = 1.5
+WATTS_TOP = 15.0
+VOLTS_COLOUR = '#2a78d6'
+AMPS_COLOUR = '#c2410c'
+WATTS_COLOUR = '#15803d'
+def graph(title: str, top: float, colour: str) -> ui.echart:
+    """Add one live graph: the time along the bottom, the values from 0 to `top` up the side."""
+    return ui.echart({
+        'animation': False,
+        'color': [colour],
+        'title': {'text': title, 'left': 0, 'textStyle': {'fontSize': 13}},
+        'grid': {'left': 45, 'right': 15, 'top': 40, 'bottom': 28},
+        'tooltip': {'trigger': 'axis'},
+        'xAxis': {'type': 'time', 'axisLabel': {'hideOverlap': True}},
+        'yAxis': {'type': 'value', 'min': 0, 'max': top},
+        'series': [{'type': 'line', 'name': title, 'data': [], 'showSymbol': False}],
+    }).classes(GRAPH_STYLE)
 @ui.page('/')
 def index() -> None:
     ui.label('Solar tracker dashboard').classes('text-2xl font-bold')
@@ -51,6 +70,11 @@ def index() -> None:
             with ui.row():
                 for key in KEYS:
                     value_labels[key] = ui.label()
+    ui.label('Graphs (last 10 minutes)').classes('font-bold')
+    with ui.row().classes('w-full no-wrap'):
+        volts_graph = graph('Panel voltage U in V', VOLTS_TOP, VOLTS_COLOUR)
+        amps_graph = graph('Panel current I in A', AMPS_TOP, AMPS_COLOUR)
+        watts_graph = graph('Panel power P in W', WATTS_TOP, WATTS_COLOUR)
 
     ui.label('Messages').classes('font-bold')
     log = ui.log(max_lines=200).classes('w-full h-96 font-mono text-xs')
@@ -126,6 +150,16 @@ def index() -> None:
 
     ui.timer(0.5, refresh)
 
+    def draw_graphs() -> None:
+        now = time.time()
+        start, end = history.window(now)
+        for chart, points in zip((volts_graph, amps_graph, watts_graph), history.series(now)):
+            chart.options['xAxis']['min'] = start
+            chart.options['xAxis']['max'] = end
+            chart.options['series'][0]['data'] = points
+            chart.update()
+
+    ui.timer(1.0, draw_graphs)
 
 app.on_startup(link.start)
 
