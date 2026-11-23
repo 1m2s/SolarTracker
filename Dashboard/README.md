@@ -23,6 +23,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 |---|---|
 | Bridge | Whether the dashboard is connected to `bridge.py`. |
 | Status | The place to look when something is wrong. One line with mode, IMU switch and start sequence, and the fault. Three more lines appear in red only when needed: what to do after a fault, the problem line while `ERR=1`, and the warning that the compass reads more than 5° away from power-on. Grey = no telemetry line for 3 s, the text is the last one known. |
+| Panel | Panel voltage `U` in volts, current `I` in amps and power `P` in watts, calculated from `A0` and `A1`. A `?` means there is no reading (no finished sum yet, or after a fault). Grey = last known values. With nothing plugged into the USB socket, the small current and power shown are measurement noise. |
 | Compass | Panel direction, sun, compass reading now and direction at power-on. |
 | Values | The raw values of the telemetry line. Grey = old or never received. |
 | Messages | Every line from the Nano except the `T:` lines. The reason for a problem line is here. |
@@ -38,6 +39,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | `angles.py` | Angle maths: the direction the panel faces now, and the difference between two directions. |
 | `compass.py` | Draws the compass as an SVG picture. |
 | `status.py` | Turns the codes `MODE`, `IMU`, `ST`, `FLT` and `ERR` into words for the Status block: the status line, what to do after a fault, the problem line and the moved-warning. |
+| `power.py` | Turns the sums `A0` and `A1` into volts, amps and watts for the Panel block. |
 | `test_*.py` | Tests for the file of the same name. |
 
 ## Tests
@@ -48,7 +50,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `52 passed`.
+The last line should say that all tests passed, for example `65 passed`.
 
 ## Telemetry line
 
@@ -88,7 +90,11 @@ With IMU AUS the panel was placed facing South by hand, so $\text{panel}_{\text{
 If `HDG` and `PAN` differ by more than 5°, the tracker was moved after power-on (or something disturbs the compass). The Status block then shows a warning.
 
 The left Nano asks the right Nano once per second. The right Nano finishes a new sum about every second (about every 2 s while the stepper turns), so a sum can show up twice. Sum ÷ 16 is the average reading, 0 to 1023.
+Panel voltage, current and power (`power.py`), with $U_{\text{ref}} = 5.0\ \text{V}$ (the Nano's reference voltage, assumed, not measured yet):
 
+$$U = \frac{\text{A0}}{16} \cdot \frac{U_{\text{ref}}}{1023} \cdot \frac{10\ \text{k}\Omega + 2.2\ \text{k}\Omega}{2.2\ \text{k}\Omega} \qquad I = \frac{\text{A1}}{16} \cdot \frac{U_{\text{ref}}}{1023} \cdot \frac{1}{\tfrac{1}{3}\ \Omega} \qquad P = U \cdot I$$
+
+With nothing plugged into the USB socket no current flows. Pin A1 still reads a little then: a current up to about 0.05 A, and the power that goes with it, is measurement noise.
 ### Planned keys (right Nano, later)
 
 | Key | Meaning |
