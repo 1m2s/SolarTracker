@@ -22,10 +22,12 @@ def index() -> None:
     bridge_status = ui.label()
 
     ui.label('Status').classes('font-bold')
-    with ui.row():
-        state_line = ui.label()
-        fault_line = ui.label()
-    fault_help = ui.label().classes('whitespace-pre-line')
+    with ui.column().classes('gap-1'):
+        with ui.row():
+            state_line = ui.label()
+            fault_line = ui.label()
+        fault_help = ui.label().classes('whitespace-pre-line')
+        problem_line = ui.label()
 
     with ui.row().classes('w-full no-wrap items-start'):
         with ui.column().classes('w-80 shrink-0'):
@@ -73,6 +75,10 @@ def index() -> None:
         fault_line.classes(replace=fault_style)
         fault_help.classes(replace=f'whitespace-pre-line {help_style}')
 
+
+        problem_line.text = status.problem_text(read('ERR'))
+        problem_line.classes(replace=FAULT_STYLE if live else OLD_TEXT_STYLE)
+        
         power_on = read('PAN')
         heading = read('HDG')
         panel = angles.panel_direction(read('IMU'), power_on, read('AZ'))
