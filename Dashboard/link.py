@@ -9,7 +9,7 @@ import socket
 import threading
 import time
 from collections import deque
-
+import history
 import telemetry
 
 HOST = '127.0.0.1'
@@ -24,9 +24,11 @@ lock = threading.Lock()
 
 
 def store(line: str) -> None:
-    """Take one line from the Nano: telemetry goes to telemetry.py, the rest is kept as a message."""
+    """Take one line from the Nano: telemetry goes to telemetry.py and history.py, the rest is kept as a message."""
     global line_count
     if telemetry.update(line, time.monotonic()):
+        values = telemetry.parse(line)
+        history.add(time.time(), values.get('A0'), values.get('A1'))
         return
     with lock:
         lines.append(line)
