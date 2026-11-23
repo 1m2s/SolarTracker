@@ -6,6 +6,7 @@ import angles
 import compass
 import history
 import link
+import sideview
 import status
 import telemetry
 import power
@@ -70,6 +71,10 @@ def index() -> None:
             with ui.row():
                 for key in KEYS:
                     value_labels[key] = ui.label()
+            with ui.row().classes('gap-6'):
+                with ui.column().classes('gap-1'):
+                    ui.label('Side view').classes('font-bold')
+                    side_view = ui.html(sideview.draw(None, None, False), sanitize=False)
     ui.label('Graphs (last 10 minutes)').classes('font-bold')
     with ui.row().classes('w-full no-wrap'):
         volts_graph = graph('Panel voltage U in V', VOLTS_TOP, VOLTS_COLOUR)
@@ -117,7 +122,7 @@ def index() -> None:
         heading = read('HDG')
         panel = angles.panel_direction(read('IMU'), power_on, read('AZ'))
         compass_view.set_content(compass.draw(panel, read('SUN'), read('SEL'), power_on, heading, live))
-
+        side_view.set_content(sideview.draw(read('EL'), read('SEL'), live))
         moved_warning.text = ''
         if live and heading is not None and power_on is not None:
             moved_by = angles.difference(heading, power_on)
