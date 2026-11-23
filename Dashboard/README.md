@@ -26,6 +26,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | Panel | Panel voltage `U` in volts, current `I` in amps and power `P` in watts, calculated from `A0` and `A1`. A `?` means there is no reading (no finished sum yet, or after a fault). Grey = last known values. With nothing plugged into the USB socket, the small current and power shown are measurement noise. |
 | Compass | Panel direction, sun, compass reading now and direction at power-on. |
 | Values | The raw values of the telemetry line. Grey = old or never received. |
+| Side view | The tracker seen from the side: the panel tilted by `EL` (0° = upright, 90° = flat) and the height of the sun `SEL`, both on a scale from 0° (the horizon) to 90° (straight up). Below the horizon the sun is an empty circle at 0°. The tilt is the last target the right Nano took, not a measured angle. The view compares heights only; the compass shows whether the panel is turned towards the sun. Grey = last known values. |
 | Graphs | Panel voltage, current and power over the last 10 minutes, one point per telemetry line. The axes are fixed (0 to 15 V, 0 to 1.5 A, 0 to 15 W), so the noise stays small. A break in a line means there was no reading. The graphs start empty every time `app.py` starts. |
 | Messages | Every line from the Nano except the `T:` lines. The reason for a problem line is here. |
 
@@ -39,6 +40,7 @@ Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 | `app.py` | The page in the browser. Only reads from `link.py`, `telemetry.py` and `history.py`, never from the serial port. |
 | `angles.py` | Angle maths: the direction the panel faces now, and the difference between two directions. |
 | `compass.py` | Draws the compass as an SVG picture. |
+| `sideview.py` | Draws the side view (panel tilt and sun height) as an SVG picture. |
 | `status.py` | Turns the codes `MODE`, `IMU`, `ST`, `FLT` and `ERR` into words for the Status block: the status line, what to do after a fault, the problem line and the moved-warning. |
 | `power.py` | Turns the sums `A0` and `A1` into volts, amps and watts for the Panel block. |
 | `history.py` | Keeps the last 10 minutes of volts, amps and watts for the graphs, one point per telemetry line. In memory only. |
@@ -52,7 +54,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `76 passed`.
+The last line should say that all tests passed, for example `87 passed`.
 
 ## Telemetry line
 
