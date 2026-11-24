@@ -3,11 +3,14 @@ import time
 from nicegui import app, ui
 
 import angles
+import clearsky
 import compass
+import estimate
 import history
 import link
 import sideview
 import status
+import sun
 import telemetry
 import topview
 import power
@@ -27,6 +30,11 @@ WATTS_TOP = 15.0
 VOLTS_COLOUR = '#2a78d6'
 AMPS_COLOUR = '#c2410c'
 WATTS_COLOUR = '#15803d'
+MODEL_COLOUR = '#9ca3af'
+ENERGY_COLOUR = '#7c3aed'
+DAY_GRAPH_STYLE = 'grow min-w-0 h-72'
+DAY_WATTS_TOP = 12.0
+TODAY_S = 10.0
 def graph(title: str, top: float, colour: str) -> ui.echart:
     """Add one live graph: the time along the bottom, the values from 0 to `top` up the side."""
     return ui.echart({
@@ -39,6 +47,29 @@ def graph(title: str, top: float, colour: str) -> ui.echart:
         'yAxis': {'type': 'value', 'min': 0, 'max': top},
         'series': [{'type': 'line', 'name': title, 'data': [], 'showSymbol': False}],
     }).classes(GRAPH_STYLE)
+
+
+def day_graph() -> ui.echart:
+    """Add the graph of the whole day: the clear-sky model, the estimated power and the estimated energy."""
+    return ui.echart({
+        'animation': False,
+        'color': [MODEL_COLOUR, WATTS_COLOUR, ENERGY_COLOUR],
+        'legend': {'right': 60, 'top': 0},
+        'grid': {'left': 45, 'right': 55, 'top': 40, 'bottom': 28},
+        'tooltip': {'trigger': 'axis'},
+        'xAxis': {'type': 'time', 'axisLabel': {'hideOverlap': True}},
+        'yAxis': [{'type': 'value', 'min': 0, 'max': DAY_WATTS_TOP, 'name': 'W'},
+                  {'type': 'value', 'min': 0, 'name': 'Wh', 'splitLine': {'show': False}}],
+        'series': [
+            {'type': 'line', 'name': 'Clear-sky model in W', 'data': [], 'showSymbol': False,
+             'lineStyle': {'type': 'dashed'}},
+            {'type': 'line', 'name': 'Estimated power in W', 'data': [], 'showSymbol': False,
+             'areaStyle': {'opacity': 0.2},
+             'markPoint': {'symbol': 'circle', 'symbolSize': 12, 'data': [],
+                           'label': {'show': True, 'formatter': 'measured', 'position': 'top'}}},
+            {'type': 'line', 'name': 'Estimated energy in Wh', 'data': [], 'showSymbol': False, 'yAxisIndex': 1},
+        ],
+    }).classes(DAY_GRAPH_STYLE)
 @ui.page('/')
 def index() -> None:
     ui.label('Solar tracker dashboard').classes('text-2xl font-bold')
@@ -85,6 +116,13 @@ def index() -> None:
         amps_graph = graph('Panel current I in A', AMPS_TOP, AMPS_COLOUR)
         watts_graph = graph('Panel power P in W', WATTS_TOP, WATTS_COLOUR)
 
+    ui.label('Today (estimate from the last 10 minutes)').classes('font-bold')
+    with ui.row().classes('w-full no-wrap items-center gap-8'):
+        with ui.column().classes('gap-1 shrink-0 w-72'):
+            today_energy = ui.label().classes(PANEL_STYLE)
+            today_kwh = ui.label().classes(NOTE_STYLE)
+            today_note = ui.label().classes(NOTE_STYLE)
+        today_graph = day_graph()
     ui.label('Messages').classes('font-bold')
     log = ui.log(max_lines=200).classes('w-full h-96 font-mono text-xs')
     seen = 0
@@ -171,6 +209,31 @@ def index() -> None:
 
     ui.timer(1.0, draw_graphs)
 
+    def draw_today() -> None:
+        now = time.time()
+        _, amps_points, watts_points = history.series(now)
+        day_number, minutes = estimate.day_and_minutes(now)
+        day_start = now - minutes * 60.0
+        reason = estimate.why_not(amps_points, watts_points, sun.elevation(day_number, minutes))
+        scale = None if reason else estimate.factor(watts_points)
+        measured = estimate.mean(watts_points)
+        energy_wh = estimate.day_wh(day_number, scale)
+        model_points, power_points, energy_points = estimate.curves(day_number, day_start, scale)
+        start, end = estimate.window(day_number, day_start)
+
+        today_energy.text = estimate.energy_text(energy_wh)
+        today_kwh.text = estimate.kwh_text(energy_wh)
+        today_note.text = estimate.note_text(reason, scale, measured, clearsky.day_wh(day_number))
+        today_graph.options['xAxis']['min'] = start
+        today_graph.options['xAxis']['max'] = end
+        today_graph.options['series'][0]['data'] = model_points
+        today_graph.options['series'][1]['data'] = power_points
+        today_graph.options['series'][2]['data'] = energy_points
+        mark = [] if scale is None else [{'coord': [now * 1000.0, round(measured, 2)]}]
+        today_graph.options['series'][1]['markPoint']['data'] = mark
+        today_graph.update()
+
+    ui.timer(TODAY_S, draw_today)
 app.on_startup(link.start)
 
 if __name__ in {'__main__', '__mp_main__'}:
