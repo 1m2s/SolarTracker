@@ -97,7 +97,20 @@ void test_real_points_on_a_circle(void)
     }
     TEST_ASSERT_TRUE((radiusMax - radiusMin) / radiusMin < 0.10f);
 }
+void test_field_strength(void)
+{
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 5.0f, fieldStrength(3.0f, 4.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 5.0f, fieldStrength(-3.0f, -4.0f));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, fieldStrength(0.0f, 0.0f));
+}
 
+void test_field_strength_of_the_outdoor_reading(void)
+{
+    float magX, magY, magZ;
+    magCalibrated(-23, 85, 116, magX, magY, magZ);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 38.1f, fieldStrength(magX, magY));
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 62.0f, magZ);
+}
 int runAllTests(void)
 {
     UNITY_BEGIN();
@@ -110,6 +123,8 @@ int runAllTests(void)
     RUN_TEST(test_z_unchanged);
     RUN_TEST(test_real_half_turn);
     RUN_TEST(test_real_points_on_a_circle);
+    RUN_TEST(test_field_strength);
+    RUN_TEST(test_field_strength_of_the_outdoor_reading);
     return UNITY_END();
 }
 

@@ -52,3 +52,7 @@ float tiltHeading(float accelX, float accelY, float magX, float magY, float magZ
     }
     return headingDeg;
 }
+float fieldStrength(float magX, float magY)
+{
+    return sqrtf((magX * magX) + (magY * magY));
+}

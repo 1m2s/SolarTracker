@@ -6,5 +6,5 @@
 void magCalibrated(int16_t magRawX, int16_t magRawY, int16_t magRawZ, float &magX, float &magY, float &magZ);
 
 float tiltHeading(float accelX, float accelY, float magX, float magY, float magZ);
-
+float fieldStrength(float magX, float magY);
 #endif
