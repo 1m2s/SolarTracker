@@ -79,7 +79,7 @@ void test_settle_lasts_3_s(void)
     TEST_ASSERT_EQUAL(STARTUP_MEASURING, controller.startup);
 }
 
-void test_measure_reads_for_10_s(void)
+void test_measure_reads_for_25_s(void)
 {
     uint32_t measureMs = latchAndSettle(100u) + ALIGN_SETTLE_MS;
     TEST_ASSERT_EQUAL(STEP_START_MEASURE, ctrlStartupStep(controller, measureMs));
@@ -291,7 +291,7 @@ int runAllTests(void)
     RUN_TEST(test_aus_skips_to_done);
     RUN_TEST(test_an_starts_settling);
     RUN_TEST(test_settle_lasts_3_s);
-    RUN_TEST(test_measure_reads_for_10_s);
+    RUN_TEST(test_measure_reads_for_25_s);
     RUN_TEST(test_no_good_reads_faults_compass);
     RUN_TEST(test_unusable_aim_faults_compass);
     RUN_TEST(test_good_measure_stores_heading_and_turns);

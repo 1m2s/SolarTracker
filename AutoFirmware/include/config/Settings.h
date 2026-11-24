@@ -39,7 +39,7 @@ const uint32_t STATUS_RETRY_MS  = 250uL; //in the beginning when imu switch posi
 const uint32_t STARTUP_WAIT_MS  = 5000uL;//if the right nano hasnt answered within 5s of start then flag a error(Controller.cpp141)
 
 const uint32_t ALIGN_SETTLE_MS  = 3000uL;
-const uint32_t ALIGN_MEASURE_MS = 10000uL;
+const uint32_t ALIGN_MEASURE_MS = 25000uL;
 const uint32_t ALIGN_HOLD_MS    = 3000uL;
 const uint32_t ALIGN_TURN_MAX_MS = 20000uL;
 
