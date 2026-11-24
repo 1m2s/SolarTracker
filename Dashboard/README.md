@@ -48,6 +48,7 @@ Stop the script with Ctrl+C in MATLAB, then type `clear s`. The bridge and the d
 | Side view | The tracker seen from the side: the panel tilted by `EL` (0° = upright, 90° = flat) and the height of the sun `SEL`, both on a scale from 0° (the horizon) to 90° (straight up). Below the horizon the sun is an empty circle at 0°. The tilt is the last target the right Nano took, not a measured angle. The view compares heights only; the compass shows whether the panel is turned towards the sun. Grey = last known values. |
 | Top view | The tracker seen from above with north up, on the same circle as the compass: the base plate as it stands on the ground (its board side faces the direction `PAN`), the panel as a bar with an arrow showing where it faces now, and the sun. The base is only drawn with the IMU switch AN, because `PAN` is only measured then. The panel direction comes from `AZ`, the last target the right Nano took, not a measured angle. Grey = last known values. |
 | Graphs | Panel voltage, current and power over the last 10 minutes, one point per telemetry line. The axes are fixed (0 to 15 V, 0 to 1.5 A, 0 to 15 W), so the noise stays small. A break in a line means there was no reading. The graphs start empty every time `app.py` starts. |
+| Today | An estimate of the energy of the whole day in Wh and kWh, with a graph of the day: the clear-sky model (dashed line), the estimated power and the estimated energy. The measured power of the last 10 minutes is compared with the model, and the model for the whole day is scaled by that. Estimate, not measured: it holds only if the sky and the load stay as they are now. There is no estimate (`E ≈ ? Wh`) without a power reading, with nothing plugged into the USB socket (current below 0.05 A) or with the sun lower than 10°; the dashed model line is still drawn. |
 | Messages | Every line from the Nano except the `T:` lines. The reason for a problem line is here. |
 
 ## Files
@@ -65,6 +66,9 @@ Stop the script with Ctrl+C in MATLAB, then type `clear s`. The bridge and the d
 | `status.py` | Turns the codes `MODE`, `IMU`, `ST`, `FLT` and `ERR` into words for the Status block: the status line, what to do after a fault, the problem line and the moved-warning. |
 | `power.py` | Turns the sums `A0` and `A1` into volts, amps and watts for the Panel block. |
 | `history.py` | Keeps the last 10 minutes of volts, amps and watts for the graphs, one point per telemetry line. In memory only. |
+| `sun.py` | How high the sun stands over Weingarten at a given day and time. The same maths as the left Nano uses, only the height (elevation). |
+| `clearsky.py` | Clear-sky model: the power the panel would give under a cloudless sky while it faces the sun, calculated from the height of the sun. A model, not a measurement. |
+| `estimate.py` | Estimates the energy of the whole day from the measured power of the last 10 minutes and the clear-sky model, and makes the texts and the graph points for the Today block. |
 | `test_*.py` | Tests for the file of the same name. |
 
 ## Tests
@@ -75,7 +79,7 @@ Inside `Dashboard/`, with the environment active:
 pytest
 ```
 
-The last line should say that all tests passed, for example `97 passed`.
+The last line should say that all tests passed, for example `144 passed`.
 
 ## Telemetry line
 
