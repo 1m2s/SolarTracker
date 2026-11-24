@@ -62,6 +62,7 @@ static void handleLine(uint32_t now);
 static void readSerial(uint32_t now);
 
 static float headingFromRaw(const ImuRaw &raw);
+static void fieldFromRaw(const ImuRaw &raw, float &fieldXY, float &fieldZ);
 
 static void aimSouth(uint32_t now);
 
@@ -69,7 +70,7 @@ static void startupTick(uint32_t now);
 
 static void askStatus(uint32_t now);
 
-static void printTelemetry(bool hasHeading, float headingDeg);
+static void printTelemetry(bool hasHeading, float headingDeg, float fieldXY, float fieldZ);
 
 static void telemetryTick(uint32_t now);
 
@@ -262,13 +263,23 @@ static float headingFromRaw(const ImuRaw &raw)
     return tiltHeading((float)raw.accelX / ACCEL_COUNTS_PER_G,
                        (float)raw.accelY / ACCEL_COUNTS_PER_G, magX, magY, magZ);
 }
-
+static void fieldFromRaw(const ImuRaw &raw, float &fieldXY, float &fieldZ)
+{
+    float magX = 0.0f;
+    float magY = 0.0f;
+    float magZ = 0.0f;
+    magCalibrated(raw.magX, raw.magY, raw.magZ, magX, magY, magZ);
+    fieldXY = fieldStrength(magX, magY);
+    fieldZ  = magZ;
+}
 static void aimSouth(uint32_t now)
 {
     ImuRaw  raw           = {0, 0, 0, 0, 0};
     float   sensorDeg     = 0.0f;
     float   panelDeg      = 0.0f;
     float   southDeg      = 0.0f;
+    float   fieldXY       = 0.0f;
+    float   fieldZ        = 0.0f;
     uint8_t azimuthByte   = 0u;
     uint8_t elevationByte = 0u;
     bool    parked        = true;
@@ -276,6 +287,7 @@ static void aimSouth(uint32_t now)
     bool averageOk = averageResult(average, raw);
     if (averageOk) {
         sensorDeg = headingFromRaw(raw);
+        fieldFromRaw(raw, fieldXY, fieldZ);
         panelDeg  = panelHeading(sensorDeg);
         southDeg  = correctedAzimuth(SOUTH_DEG, panelDeg);
         parked    = alignBytes(southDeg, azimuthByte, elevationByte);
@@ -291,6 +303,8 @@ static void aimSouth(uint32_t now)
     }
 
     Serial.print(F("START   reads=")); Serial.print(average.goodReads);
+    Serial.print(F("  field="));       Serial.print(fieldXY, 1);
+    Serial.print(F("  z="));           Serial.print(fieldZ, 1);
     Serial.print(F("  h="));           Serial.print(sensorDeg, 1);
     Serial.print(F("  panel="));       Serial.print(panelDeg, 1);
     Serial.print(F("  south="));       Serial.print(southDeg, 1);
@@ -382,7 +396,7 @@ static void askStatus(uint32_t now)
         }
     }
 }
-static void printTelemetry(bool hasHeading, float headingDeg)
+static void printTelemetry(bool hasHeading, float headingDeg, float fieldXY, float fieldZ)
 {
     Serial.print(F("T:MODE=")); Serial.print((controller.mode == MODE_AUTO) ? 'A' : 'M');
     Serial.print(F(" ST="));    Serial.print((uint8_t)controller.startup);
@@ -401,6 +415,8 @@ static void printTelemetry(bool hasHeading, float headingDeg)
     }
     if (hasHeading) {
         Serial.print(F(" HDG=")); Serial.print(headingDeg, 1);
+        Serial.print(F(" FXY=")); Serial.print(fieldXY, 1);
+        Serial.print(F(" FZ="));  Serial.print(fieldZ, 1);
     }
     Serial.print(F(" AZ=")); Serial.print((uint16_t)controller.sentAzimuthByte * AZIMUTH_DEG_PER_COUNT);
     Serial.print(F(" EL=")); Serial.print(controller.sentElevationByte);
@@ -419,14 +435,17 @@ static void telemetryTick(uint32_t now)
 
     bool  hasHeading = false;
     float headingDeg = 0.0f;
+    float fieldXY    = 0.0f;
+    float fieldZ     = 0.0f;
     if (SEND_I2C && ctrlLiveCompass(controller)) {
         ImuRaw raw = {0, 0, 0, 0, 0};
         if (imuRead(raw)) {
             headingDeg = panelHeading(headingFromRaw(raw));
             hasHeading = (headingDeg >= 0.0f) && (headingDeg < FULL_TURN_DEG);
+            fieldFromRaw(raw, fieldXY, fieldZ);
         }
     }
-    printTelemetry(hasHeading, headingDeg);
+    printTelemetry(hasHeading, headingDeg, fieldXY, fieldZ);
 }
 
 void setup()
