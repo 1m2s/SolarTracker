@@ -6,6 +6,8 @@ static const uint32_t ERROR_BLINK_MS = 200uL;
 static const uint32_t AUTO_BLINK_MS  = 1000uL;
 static const float    START_AZIMUTH_DEG = 180.0f;
 static const uint32_t TURN_START_MS  = 500uL;
+static const uint8_t  START_AZIMUTH_BYTE   = 90u;
+static const uint8_t  START_ELEVATION_BYTE = 0u;
 
 static bool startupBusy(const Controller &controller)
 {
@@ -40,6 +42,14 @@ void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs)
     controller.startup         = STARTUP_WAITING;
     controller.startupMs       = nowMs;
     controller.panelDeg        = 0.0f;
+    controller.motorStill        = false;
+    controller.lastTargetMs      = nowMs;
+    controller.sentAzimuthByte   = START_AZIMUTH_BYTE;
+    controller.sentElevationByte = START_ELEVATION_BYTE;
+    controller.lastTelemetryMs   = nowMs;
+    controller.readingsValid     = false;
+    controller.sumA0             = 0u;
+    controller.sumA1             = 0u;
 }
 
 bool ctrlSwitch(Controller &controller, bool switchOpen, uint32_t nowMs)
@@ -144,6 +154,11 @@ StatusResult ctrlStatus(Controller &controller, bool answered, uint8_t status, u
     }
 
     bool switchOn = (status & STATUS_IMU_ON) != 0u;
+
+    if (answered) {
+        bool motorMoving = (status & STATUS_MOVING) != 0u;
+        controller.motorStill = !motorMoving && isDue(nowMs, controller.lastTargetMs, TURN_START_MS);
+    }
 
     if (!controller.imuKnown) {
         if (answered) {
@@ -296,17 +311,13 @@ StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs)
     }
 }
 
-ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs)
+ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool aimOk, float panelDeg, uint32_t nowMs)
 {
     if ((controller.startup != STARTUP_AIMING) || (controller.fault != FAULT_NONE)) {
         return controller.fault;
     }
-    if (!averageOk) {
+    if (!averageOk || !aimOk) {
         controller.fault = FAULT_COMPASS;
-        return controller.fault;
-    }
-    if (!southOk) {
-        controller.fault = FAULT_NOT_SOUTH;
         return controller.fault;
     }
     controller.panelDeg  = panelDeg;
@@ -329,4 +340,62 @@ bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs)
     controller.startup   = STARTUP_HOLDING;
     controller.startupMs = nowMs;
     return true;
+}
+
+
+void ctrlTargetSent(Controller &controller, uint8_t azimuthByte, uint8_t elevationByte, uint32_t nowMs)
+{
+    if (azimuthByte != controller.sentAzimuthByte) {
+        controller.motorStill   = false;
+        controller.lastTargetMs = nowMs;
+    }
+    controller.sentAzimuthByte   = azimuthByte;
+    controller.sentElevationByte = elevationByte;
+}
+
+bool ctrlLiveCompass(const Controller &controller)
+{
+    return (controller.fault == FAULT_NONE) && (controller.startup == STARTUP_DONE)
+        && controller.motorStill;
+}
+
+bool ctrlPanelKnown(const Controller &controller)
+{
+    bool measured = (controller.startup == STARTUP_TURNING) || (controller.startup == STARTUP_HOLDING)
+                 || (controller.startup == STARTUP_DONE);
+    return controller.imuSwitchOn && measured;
+}
+
+bool ctrlTelemetryDue(Controller &controller, uint32_t nowMs)
+{
+    if (!isDue(nowMs, controller.lastTelemetryMs, TELEMETRY_INTERVAL_MS)) {
+        return false;
+    }
+    controller.lastTelemetryMs = nowMs;
+    return true;
+}
+
+uint16_t ctrlSumFromBytes(uint8_t lowByte, uint8_t highByte)
+{
+    return (uint16_t)(((uint16_t)highByte << 8) | (uint16_t)lowByte);
+}
+
+void ctrlReadings(Controller &controller, bool answered, uint8_t status, uint16_t sumA0, uint16_t sumA1)
+{
+    bool ready   = (status & STATUS_READINGS) != 0u;
+    bool inRange = (sumA0 <= READING_SUM_MAX) && (sumA1 <= READING_SUM_MAX);
+
+    controller.readingsValid = answered && ready && inRange;
+    if (controller.readingsValid) {
+        controller.sumA0 = sumA0;
+        controller.sumA1 = sumA1;
+    } else {
+        controller.sumA0 = 0u;
+        controller.sumA1 = 0u;
+    }
+}
+
+bool ctrlReadingsKnown(const Controller &controller)
+{
+    return controller.readingsValid && (controller.fault == FAULT_NONE);
 }

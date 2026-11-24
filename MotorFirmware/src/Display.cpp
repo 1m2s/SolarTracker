@@ -1,17 +1,19 @@
 #include "Display.h"
 
+const int LAST_DIGIT = 7;
+const int BRIGHTNESS = 15;
+
 void showVoltage(LedControl &lc, int U)
 {
     if (U < -999 || U > 999) {
         return;
     }
     if (U < 0) {
-        U = -U;                    // sign is not shown
+        U = -U;
     }
     int ones = U % 10;
     int tens = (U / 10) % 10;
 
-    // "U=" built from single segments (digit 7 and 6)
     lc.setLed(0, 7, 2, true);
     lc.setLed(0, 7, 3, true);
     lc.setLed(0, 7, 4, true);
@@ -35,7 +37,6 @@ void showPower(LedControl &lc, int P)
     int ones = P % 10;
     int tens = (P / 10) % 10;
 
-    // "P=" (digit 3 and 2)
     lc.setChar(0, 3, 'P', false);
     lc.setLed(0, 2, 4, true);
     lc.setLed(0, 2, 7, true);
@@ -44,13 +45,9 @@ void showPower(LedControl &lc, int P)
     lc.setDigit(0, 0, (byte)ones, false);
 }
 
-/* Notes
-1) Same as printVoltage() and printPower() in Photovoltaiknachfuehrung.ino.
-   Unused variables (hundreds, negative) were removed. What the display
-   shows did not change.
-
-2) Digits count from the right: 0 = rightmost, 7 = leftmost.
-
-3) Only tens and ones are shown, so 0..99. Hundreds are cut off,
-   e.g. 123 shows as "23". Same as before.
-*/
+void wakeDisplay(LedControl &lc)
+{
+    lc.setScanLimit(0, LAST_DIGIT);
+    lc.setIntensity(0, BRIGHTNESS);
+    lc.shutdown(0, false);
+}

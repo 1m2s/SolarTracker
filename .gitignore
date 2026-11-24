@@ -6,3 +6,6 @@
 
 # VS Code / PlatformIO local settings
 .vscode/
+
+.venv/
+__pycache__/

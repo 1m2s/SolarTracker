@@ -72,13 +72,26 @@ void test_nan_parks(void)
     TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
 }
 
-void test_outside_window_parks(void)
+void test_every_direction_is_sent(void)
 {
     uint8_t azimuthByte, elevationByte;
-    TEST_ASSERT_TRUE(targetBytes(20.0f,  10.0f, azimuthByte, elevationByte));
-    TEST_ASSERT_TRUE(targetBytes(340.0f, 10.0f, azimuthByte, elevationByte));
-    TEST_ASSERT_FALSE(targetBytes(50.0f, 10.0f, azimuthByte, elevationByte));
-    TEST_ASSERT_FALSE(targetBytes(310.0f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_FALSE(targetBytes(20.0f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(10, azimuthByte);
+    TEST_ASSERT_FALSE(targetBytes(340.0f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(170, azimuthByte);
+    TEST_ASSERT_FALSE(targetBytes(0.0f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(0, azimuthByte);
+    TEST_ASSERT_FALSE(targetBytes(360.0f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(180, azimuthByte);
+}
+
+void test_outside_full_turn_parks(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_TRUE(targetBytes(-0.1f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
+    TEST_ASSERT_TRUE(targetBytes(360.1f, 10.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
 }
 
 void test_align_south_target(void)
@@ -97,24 +110,32 @@ void test_align_outdoor_position_2(void)
     TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
 }
 
-void test_align_safe_range_edges(void)
+void test_align_full_turn_edges(void)
 {
     uint8_t azimuthByte, elevationByte;
-    TEST_ASSERT_FALSE(alignBytes(50.0f, azimuthByte, elevationByte));
-    TEST_ASSERT_EQUAL_UINT8(25, azimuthByte);
-    TEST_ASSERT_FALSE(alignBytes(310.0f, azimuthByte, elevationByte));
-    TEST_ASSERT_EQUAL_UINT8(155, azimuthByte);
+    TEST_ASSERT_FALSE(alignBytes(0.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(0, azimuthByte);
+    TEST_ASSERT_FALSE(alignBytes(360.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(180, azimuthByte);
 }
 
-void test_align_outside_range_parks(void)
+void test_align_panel_at_311_reaches_south(void)
 {
     uint8_t azimuthByte, elevationByte;
-    TEST_ASSERT_TRUE(alignBytes(49.9f, azimuthByte, elevationByte));
+    TEST_ASSERT_FALSE(alignBytes(48.9f, azimuthByte, elevationByte));
+    TEST_ASSERT_EQUAL_UINT8(24, azimuthByte);
+    TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
+}
+
+void test_align_outside_full_turn_parks(void)
+{
+    uint8_t azimuthByte, elevationByte;
+    TEST_ASSERT_TRUE(alignBytes(-0.1f, azimuthByte, elevationByte));
     TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
     TEST_ASSERT_EQUAL_UINT8(0,  elevationByte);
-    TEST_ASSERT_TRUE(alignBytes(310.1f, azimuthByte, elevationByte));
+    TEST_ASSERT_TRUE(alignBytes(360.1f, azimuthByte, elevationByte));
     TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
-    TEST_ASSERT_TRUE(alignBytes(330.0f, azimuthByte, elevationByte));
+    TEST_ASSERT_TRUE(alignBytes(400.0f, azimuthByte, elevationByte));
     TEST_ASSERT_EQUAL_UINT8(90, azimuthByte);
 }
 
@@ -165,11 +186,13 @@ int runAllTests(void)
     RUN_TEST(test_sunset_29Oct);
     RUN_TEST(test_elevation_zero_parks);
     RUN_TEST(test_nan_parks);
-    RUN_TEST(test_outside_window_parks);
+    RUN_TEST(test_every_direction_is_sent);
+    RUN_TEST(test_outside_full_turn_parks);
     RUN_TEST(test_align_south_target);
     RUN_TEST(test_align_outdoor_position_2);
-    RUN_TEST(test_align_safe_range_edges);
-    RUN_TEST(test_align_outside_range_parks);
+    RUN_TEST(test_align_full_turn_edges);
+    RUN_TEST(test_align_panel_at_311_reaches_south);
+    RUN_TEST(test_align_outside_full_turn_parks);
     RUN_TEST(test_align_nan_parks);
 #ifndef ARDUINO
     RUN_TEST(test_year_scan);

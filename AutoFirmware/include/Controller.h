@@ -14,7 +14,6 @@ enum ImuFault : uint8_t {
     FAULT_NO_ANSWER    = 1,
     FAULT_SWITCH_MOVED = 2,
     FAULT_COMPASS      = 3,
-    FAULT_NOT_SOUTH    = 4,
     FAULT_TURN_TIMEOUT = 5
 };
 
@@ -82,6 +81,14 @@ struct Controller {
     StartupState startup;
     uint32_t     startupMs;
     float        panelDeg;
+    bool         motorStill;
+    uint32_t     lastTargetMs;
+    uint8_t      sentAzimuthByte;
+    uint8_t      sentElevationByte;
+    uint32_t     lastTelemetryMs;
+    bool         readingsValid;
+    uint16_t     sumA0;
+    uint16_t     sumA1;
 };
 
 void ctrlInit(Controller &controller, bool switchOpen, uint32_t nowMs);
@@ -118,8 +125,21 @@ bool ctrlResendAllowed(const Controller &controller);
 
 StartupStep ctrlStartupStep(Controller &controller, uint32_t nowMs);
 
-ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool southOk, float panelDeg, uint32_t nowMs);
+ImuFault ctrlStartupMeasured(Controller &controller, bool averageOk, bool aimOk, float panelDeg, uint32_t nowMs);
 
 bool ctrlStartupMotor(Controller &controller, uint8_t status, uint32_t nowMs);
 
+void ctrlTargetSent(Controller &controller, uint8_t azimuthByte, uint8_t elevationByte, uint32_t nowMs);
+
+bool ctrlLiveCompass(const Controller &controller);
+
+bool ctrlPanelKnown(const Controller &controller);
+
+bool ctrlTelemetryDue(Controller &controller, uint32_t nowMs);
+
+uint16_t ctrlSumFromBytes(uint8_t lowByte, uint8_t highByte);
+
+void ctrlReadings(Controller &controller, bool answered, uint8_t status, uint16_t sumA0, uint16_t sumA1);
+
+bool ctrlReadingsKnown(const Controller &controller);
 #endif

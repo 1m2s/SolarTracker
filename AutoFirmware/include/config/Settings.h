@@ -33,7 +33,7 @@ const uint8_t MAG_SAMPLES = 4u;//each compass reading= 4 measurments averaged fo
 const uint32_t MAG_WAIT_MS = 10uL;//Wait for the compass chip to finish one measurment(Imu.cpp70)
 
 //Controller.cpp 118=>uint32_t intervalMs = controller.imuKnown? COMPASS_CHECK_MS : STATUS_RETRY_MS; here it says if the imu switch is known wait 2s otherwise 250ms
-const uint32_t COMPASS_CHECK_MS = 2000uL;//asks the right nano for the status byte(read the compass if the imu is on) every 2s
+const uint32_t COMPASS_CHECK_MS = 1000uL;//asks the right nano for the status byte(read the compass if the imu is on) every 1s
 const uint32_t STATUS_RETRY_MS  = 250uL; //in the beginning when imu switch position is unkown then ask every 250ms
 
 const uint32_t STARTUP_WAIT_MS  = 5000uL;//if the right nano hasnt answered within 5s of start then flag a error(Controller.cpp141)
@@ -42,6 +42,9 @@ const uint32_t ALIGN_SETTLE_MS  = 3000uL;
 const uint32_t ALIGN_MEASURE_MS = 10000uL;
 const uint32_t ALIGN_HOLD_MS    = 3000uL;
 const uint32_t ALIGN_TURN_MAX_MS = 20000uL;
+
+const bool SEND_TELEMETRY = true;
+const uint32_t TELEMETRY_INTERVAL_MS = 1000uL;
 
 const uint8_t COMPASS_FAIL_READS    = 3u; //3bad compass readings in a row then compassfailed and park (Controller.cpp185,191)
 const uint8_t COMPASS_RECOVER_READS = 3u; //3good readings in arow then it recovers and tracking continues(Controller.cpp171,177)

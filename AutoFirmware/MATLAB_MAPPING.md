@@ -193,7 +193,7 @@ This script is new (not a port). It is the MATLAB side of the C++ MATLAB mode an
 | `azimuth` | Computes the elevation formula itself, like `Azimut.m` (no call to `elevation()`). |
 | all math | `float` and `sinf`/`cosf`/... instead of `double` (on the AVR, `double` is also 32 bit). |
 | `dayOfYear` | No leap years, same as MATLAB (not a difference, kept on purpose). |
-| `targetBytes` | Parks (azimuth byte 90, elevation byte 0) at night (`elevationDeg <= 0`) or when the azimuth is outside 50..310 ° or `NAN`. MATLAB sends the raw bytes. |
+| `targetBytes` | Parks (azimuth byte 90, elevation byte 0) at night (`elevationDeg <= 0`) or when the azimuth is not a number from 0 to 360 °. MATLAB sends the raw bytes. |
 | time source | MATLAB `clock` gives PC time and the summer-time flag; C++ reads the DS1302 RTC and uses the fixed `RTC_SUMMER_TIME = false` (RTC kept on winter time). |
 | `Jahr` | Unused in MATLAB; C++ uses the year only to check the RTC (`RTC_YEAR_MIN`). |
 | interval | MATLAB waits 30 s after each send; C++ runs every 30 s from the start of the last cycle (`isDue`), and runs right away on start-up or on switching to AUTO (`runNow`). |

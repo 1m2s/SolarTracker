@@ -280,7 +280,7 @@ void test_no_answer_waits_then_faults_at_5_s(void)
     TEST_ASSERT_TRUE(ctrlLedOn(controller, 400u));
 }
 
-void test_after_latch_asked_every_2_s(void)
+void test_after_latch_asked_every_1_s(void)
 {
     ctrlInit(controller, SWITCH_OPEN, 0u);
     TEST_ASSERT_TRUE(ctrlStatusDue(controller, 0u));
@@ -496,10 +496,10 @@ void test_park_send_stores_180(void)
 void test_send_restarts_check_timer(void)
 {
     latchImuOn();
-    ctrlSendDone(controller, 1500u, 40.0f, true);
+    ctrlSendDone(controller, 500u, 40.0f, true);
     TEST_ASSERT_FALSE(ctrlStatusDue(controller, COMPASS_CHECK_MS));
-    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 1500u + COMPASS_CHECK_MS - 1u));
-    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 1500u + COMPASS_CHECK_MS));
+    TEST_ASSERT_FALSE(ctrlStatusDue(controller, 500u + COMPASS_CHECK_MS - 1u));
+    TEST_ASSERT_TRUE(ctrlStatusDue(controller, 500u + COMPASS_CHECK_MS));
 }
 
 void test_read_compass_only_when_imu_on_and_motor_still(void)
@@ -627,7 +627,7 @@ int runAllTests(void)
     RUN_TEST(test_first_answer_an_latches_on);
     RUN_TEST(test_first_answer_an_while_moving_latches_on);
     RUN_TEST(test_no_answer_waits_then_faults_at_5_s);
-    RUN_TEST(test_after_latch_asked_every_2_s);
+    RUN_TEST(test_after_latch_asked_every_1_s);
     RUN_TEST(test_moving_bit_is_not_a_switch_change);
     RUN_TEST(test_switch_moved_faults);
     RUN_TEST(test_fault_is_permanent);

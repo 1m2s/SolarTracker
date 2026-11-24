@@ -4,7 +4,7 @@ All commands run inside `MotorFirmware/`.
 
 | Folder | What it checks | Needs | Runs in CI |
 |---|---|---|---|
-| `logic/` | Step and servo rules (`test_motion`), voltage and power (`test_measure`), status byte (`test_status`) | Nothing | ✅ |
+| `logic/` | Step and servo rules (`test_motion`), voltage and power (`test_measure`), status byte (`test_status`), reading sums and answer bytes (`test_readings`) | Nothing | ✅ |
 
 | Goal | Command |
 |---|---|

@@ -98,11 +98,11 @@ void test_no_good_reads_faults_compass(void)
     TEST_ASSERT_TRUE(ctrlBlocked(controller));
 }
 
-void test_unsafe_south_faults_not_south(void)
+void test_unusable_aim_faults_compass(void)
 {
     uint32_t aimMs = measureUntilAim(latchAndSettle(100u));
-    TEST_ASSERT_EQUAL(FAULT_NOT_SOUTH, ctrlStartupMeasured(controller, true, false, 30.0f, aimMs));
-    TEST_ASSERT_EQUAL(FAULT_NOT_SOUTH, controller.fault);
+    TEST_ASSERT_EQUAL(FAULT_COMPASS, ctrlStartupMeasured(controller, true, false, 30.0f, aimMs));
+    TEST_ASSERT_EQUAL(FAULT_COMPASS, controller.fault);
     TEST_ASSERT_TRUE(ctrlBlocked(controller));
 }
 
@@ -293,7 +293,7 @@ int runAllTests(void)
     RUN_TEST(test_settle_lasts_3_s);
     RUN_TEST(test_measure_reads_for_10_s);
     RUN_TEST(test_no_good_reads_faults_compass);
-    RUN_TEST(test_unsafe_south_faults_not_south);
+    RUN_TEST(test_unusable_aim_faults_compass);
     RUN_TEST(test_good_measure_stores_heading_and_turns);
     RUN_TEST(test_measured_ignored_outside_aiming);
     RUN_TEST(test_turning_waits_while_moving);

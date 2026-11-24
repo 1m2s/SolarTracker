@@ -31,7 +31,7 @@ The right Nano has no home position. Wherever the mast stands at power-on is its
 
    ![Panel start pose for IMU mode](../images/figure2.png)
 
-4. Place the whole tracker so the panel faces **roughly South**. The exact direction doesn't matter, but not within about 50° of North (the cables can't reach South from there).
+4. Place the whole tracker so the panel faces **roughly South**. The exact direction doesn't matter: the start sequence turns the panel up to half a turn to face South. Roughly South keeps the turns short.
 5. Keep the base level.
 6. Keep magnets, metal and laptops at least 1 m away from the IMU. Best outdoors: indoors the building weakens the magnetic field and the panel can end up tens of degrees away from South. Outdoors it was within about ±2°.
 
@@ -60,7 +60,7 @@ The right Nano has no home position. Wherever the mast stands at power-on is its
 | Hold | 3 s | the panel stays at South |
 | Running | – | normal AUTO or MATLAB mode |
 
-The compass is read **only here**. Every sun angle afterwards is corrected with this one measurement. If the tracker is moved while running, power-cycle it and do the alignment again.
+The compass is used for tracking **only here**. Every sun angle afterwards is corrected with this one measurement. If the tracker is moved while running, power-cycle it and do the alignment again. (The telemetry line reads the compass once per second, but only to show it in the dashboard; it never moves the panel.)
 
 With IMU AUS there is no start sequence; tracking starts right away.
 
@@ -72,8 +72,18 @@ The clock (DS1302) runs on **CET (winter time) all year**. Set it with `pio test
 
 ### MATLAB mode
 
-1. Close the PlatformIO monitor (only one program can use the USB port).
-2. Open `MatlabSerial/AusgabeSonnenstandSerial.m`, set `port` (find it with `serialportlist("available")`), click Run.
+Only one program can use the USB port, so there are two ways.
+
+#### With the dashboard (bridge running)
+
+1. Start the bridge inside `Dashboard/` (commands in [`../Dashboard/README.md`](../Dashboard/README.md)). Like the monitor, starting the bridge restarts the left Nano, so the start sequence runs again.
+2. Open `MatlabSerial/AusgabeSonnenstandBridge.m` and click Run. There is no port to set, and the Nano does not restart.
+3. MATLAB sends the sun angle every 30 s. Stop with Ctrl+C, then type `clear s`. The bridge keeps running.
+
+#### Without the dashboard (USB directly)
+
+1. Close the PlatformIO monitor and stop `bridge.py` (Ctrl+C in its terminal).
+2. Open `MatlabSerial/AusgabeSonnenstandSerial.m`, set `port` (find it with `serialportlist("available")`), click Run. Opening the port restarts the left Nano.
 3. MATLAB sends the sun angle every 30 s. Stop with Ctrl+C, then type `clear s`.
 
 **Never run the old `AusgabeSonnenstand.m` on this Nano.** Its `arduino()` call replaces AutoFirmware with MATLAB's own firmware.
@@ -82,7 +92,7 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 
 ## What the tracker does
 
-- **Night and unsafe angles:** if the sun is at or below the horizon, or the needed angle is outside 50°–310°, the panel parks upright:
+- **Night:** if the sun is at or below the horizon, the panel parks upright:
   - IMU AUS: at the start direction (South, as you placed it).
   - IMU AN: at the South found in the start sequence.
 - **Faults:** the panel parks upright at the start direction, the LED blinks fast and tracking stops until a power-cycle.
@@ -111,7 +121,7 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 | `START   done -> running` | Start sequence finished | – |
 | `AUTO    <time>  az=...  el=...  ack=0/0` | IMU AUS: sun angle sent; `ack=0/0` = the right Nano got both bytes | – |
 | `AUTO    <time>  sun=...  el=...  panel=...  az=...  ack=0/0` | IMU AN: sun angle (`sun`) and the corrected angle sent (`az`) | – |
-| `... PARK` / `... PARK south` | Night or angle outside 50°–310° | – |
+| `... PARK` / `... PARK south` | Night | – |
 | `ack=` with numbers other than `0/0` | Right Nano did not get the bytes | Check the I2C wires between the Nanos. |
 | `AUTO    RTC stopped / not valid / frozen -> nothing sent` | Clock problem, nothing sent | Check the RTC wires (D5, D6, D7); set the clock again. |
 | `ignored: switch on AUTO` | A MATLAB line arrived in AUTO | Flip the mode switch to MATLAB. |
@@ -121,16 +131,16 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 | `MATLAB  timeout -> panel stays` | No good line for 180 s | Restart the MATLAB script. The panel keeps its position. |
 | `line too long -> ignored` | Serial line too long | Check what is sent. |
 | `START   no good compass reads -> power-cycle` | The compass gave no usable reading | Check the IMU cable, power-cycle. |
-| `START   panel faces north (panel=...), cables can't reach south -> ...` | Tracker was placed facing North | Turn the whole tracker around, power-cycle. |
 | `START   turn not finished -> power-cycle` | The turn to South took longer than 20 s | Check the motor and the right Nano, power-cycle. |
 | `right Nano not answering -> power-cycle` | Right Nano did not answer within 5 s of the start | Check the right Nano and the I2C wires, power-cycle. |
 | `IMU switch moved -> power-cycle` | IMU switch changed while running | Do the alignment for the new position, power-cycle. |
 | `FAULT   az=180.0000  el=0.0000 ... PARK` | Park after any fault | Read the message above it. |
+| `T:MODE=A ST=6 FLT=0 ...` | Telemetry for the dashboard, once per second | Nothing. The keys are explained in [`../Dashboard/README.md`](../Dashboard/README.md). To switch it off, set `SEND_TELEMETRY = false` in `include/config/Settings.h`. |
 
 ## Stop
 
 1. Turn the tracker's power OFF.
-2. In MATLAB mode: Ctrl+C in MATLAB, then `clear s`.
+2. In MATLAB mode: Ctrl+C in MATLAB, then `clear s`. If the bridge runs: Ctrl+C in its terminal too.
 3. Disconnect USB and the power bank if packing away.
 
 The switches can stay where they are. Before the next power-on, do the alignment again.

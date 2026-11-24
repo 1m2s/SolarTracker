@@ -21,6 +21,18 @@ const uint8_t REG_ELEVATION = 255u; //The register address for elevation angle (
 //Used by bitmasks so if status returns as 0x03 then both bits are set status&(either)=imu switch is on and stepper is moving
 const uint8_t STATUS_IMU_ON = 0x01u; //Bit 0 of the status byte indicating switch is on (Controller.cpp 133)
 const uint8_t STATUS_MOVING = 0x02u; //Bit 1 = stepper is moving (Controller.cpp 220)
+const uint8_t STATUS_READINGS = 0x04u;
+
+const uint8_t ANSWER_LENGTH  = 5u;
+const uint8_t ANSWER_STATUS  = 0u;
+const uint8_t ANSWER_A0_LOW  = 1u;
+const uint8_t ANSWER_A0_HIGH = 2u;
+const uint8_t ANSWER_A1_LOW  = 3u;
+const uint8_t ANSWER_A1_HIGH = 4u;
+
+const uint8_t  READINGS_PER_SUM = 16u;
+const uint16_t READING_MAX      = 1023u;
+const uint16_t READING_SUM_MAX  = (uint16_t)(READINGS_PER_SUM * READING_MAX);
 
 /*so the left nano has 3 i2c addresses: 0x19(right nano), 0x68(imu) , 0x0C(compass)
 Both used in Imu.cpp

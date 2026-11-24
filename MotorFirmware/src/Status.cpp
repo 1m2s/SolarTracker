@@ -1,6 +1,6 @@
 #include "Status.h"
 
-uint8_t statusByte(bool imuSwitchOn, bool stepperMoving)
+uint8_t statusByte(bool imuSwitchOn, bool stepperMoving, bool readingsReady)
 {
     uint8_t status = 0u;
     if (imuSwitchOn) {
@@ -8,6 +8,9 @@ uint8_t statusByte(bool imuSwitchOn, bool stepperMoving)
     }
     if (stepperMoving) {
         status = status | STATUS_MOVING;
+    }
+    if (readingsReady) {
+        status = status | STATUS_READINGS;
     }
     return status;
 }
