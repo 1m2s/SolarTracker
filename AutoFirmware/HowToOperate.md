@@ -72,8 +72,18 @@ The clock (DS1302) runs on **CET (winter time) all year**. Set it with `pio test
 
 ### MATLAB mode
 
-1. Close the PlatformIO monitor (only one program can use the USB port).
-2. Open `MatlabSerial/AusgabeSonnenstandSerial.m`, set `port` (find it with `serialportlist("available")`), click Run.
+Only one program can use the USB port, so there are two ways.
+
+#### With the dashboard (bridge running)
+
+1. Start the bridge inside `Dashboard/` (commands in [`../Dashboard/README.md`](../Dashboard/README.md)). Like the monitor, starting the bridge restarts the left Nano, so the start sequence runs again.
+2. Open `MatlabSerial/AusgabeSonnenstandBridge.m` and click Run. There is no port to set, and the Nano does not restart.
+3. MATLAB sends the sun angle every 30 s. Stop with Ctrl+C, then type `clear s`. The bridge keeps running.
+
+#### Without the dashboard (USB directly)
+
+1. Close the PlatformIO monitor and stop `bridge.py` (Ctrl+C in its terminal).
+2. Open `MatlabSerial/AusgabeSonnenstandSerial.m`, set `port` (find it with `serialportlist("available")`), click Run. Opening the port restarts the left Nano.
 3. MATLAB sends the sun angle every 30 s. Stop with Ctrl+C, then type `clear s`.
 
 **Never run the old `AusgabeSonnenstand.m` on this Nano.** Its `arduino()` call replaces AutoFirmware with MATLAB's own firmware.
@@ -130,7 +140,7 @@ You can also type angles by hand in the PlatformIO monitor: `azimuth elevation`,
 ## Stop
 
 1. Turn the tracker's power OFF.
-2. In MATLAB mode: Ctrl+C in MATLAB, then `clear s`.
+2. In MATLAB mode: Ctrl+C in MATLAB, then `clear s`. If the bridge runs: Ctrl+C in its terminal too.
 3. Disconnect USB and the power bank if packing away.
 
 The switches can stay where they are. Before the next power-on, do the alignment again.

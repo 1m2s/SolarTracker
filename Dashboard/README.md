@@ -17,6 +17,25 @@ All commands run inside `Dashboard/`.
 
 Then open `http://127.0.0.1:8080`. The port name changes with the USB socket.
 
+## MATLAB through the bridge
+
+With the bridge running, MATLAB sends the sun position through it, so MATLAB mode and the dashboard work at the same time.
+
+1. Start the bridge first (Terminal 1 above).
+2. Set the mode switch to **MATLAB**.
+3. In MATLAB, run `MatlabSerial/AusgabeSonnenstandBridge.m`. There is no port to set.
+
+| Where | What you see |
+|---|---|
+| MATLAB Command Window | `Connected to the bridge (127.0.0.1:5555)`, then every 30 s one `sent: ...` line with the azimuth and elevation, and the Nano's answer under it (`Nano: MATLAB  ...`). No `T:` lines: the script skips them. |
+| Dashboard | Status shows `Mode: MATLAB`. `SUN` and `SEL` in the Values row are the angles MATLAB sent. Messages shows one `MATLAB  ...` line every 30 s. |
+| MATLAB, when the bridge is not running | The script stops with `Could not connect to the bridge at 127.0.0.1:5555. Is bridge.py running?` |
+
+The left Nano does not restart when the script connects, so the start sequence does not run again.
+
+While the bridge runs it holds the USB port: `AusgabeSonnenstandSerial.m` and the PlatformIO monitor cannot open it. Stop the bridge first (Ctrl+C in Terminal 1) to use them.
+
+Stop the script with Ctrl+C in MATLAB, then type `clear s`. The bridge and the dashboard keep running.
 ## The page
 
 | Part | What it shows |

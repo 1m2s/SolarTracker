@@ -12,6 +12,7 @@
 %   4) Run this script. Stop with Ctrl+C, then type: clear s
 %
 % Needs MATLAB R2019b or newer (serialport).
+% While Dashboard/bridge.py is running use AusgabeSonnenstandBridge.m.
 % Never run the old AusgabeSonnenstand.m on this Nano:
 % arduino() would replace our firmware.
 %
