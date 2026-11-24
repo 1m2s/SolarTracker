@@ -23,6 +23,9 @@ def test_line_without_the_sums_leaves_them_out():
 def test_sums_are_whole_numbers():
     assert telemetry.parse('T:A0=0 A1=16368') == {'A0': 0, 'A1': 16368}
     assert telemetry.parse('T:A0=27.5 A1=x ERR=yes') == {}
+def test_field_strength_keys_are_numbers():
+    assert telemetry.parse('T:HDG=284.1 FXY=38.1 FZ=62.0') == {'HDG': 284.1, 'FXY': 38.1, 'FZ': 62.0}
+    assert telemetry.parse('T:FXY=nan FZ=x') == {}
 def test_other_lines_are_not_telemetry():
     assert telemetry.parse('PARK south') is None
     assert telemetry.parse('AUTO  az=180.0000  el=0.0000  azByte=90  elByte=0') is None

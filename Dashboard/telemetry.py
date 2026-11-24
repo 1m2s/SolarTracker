@@ -12,6 +12,7 @@ PREFIX = 'T:'
 MODES = ('A', 'M')
 WHOLE_KEYS = ('ST', 'FLT', 'ERR', 'IMU', 'MOV', 'A0', 'A1')
 DEGREE_KEYS = ('SUN', 'SEL', 'PAN', 'HDG', 'AZ', 'EL')
+FIELD_KEYS = ('FXY', 'FZ')
 MAX_AGE_S = 3.0
 
 latest = {}
@@ -33,7 +34,7 @@ def parse(line: str) -> dict[str, str | int | float] | None:
                     values[key] = text
             elif key in WHOLE_KEYS:
                 values[key] = int(text)
-            elif key in DEGREE_KEYS:
+            elif key in DEGREE_KEYS or key in FIELD_KEYS:
                 number = float(text)
                 if math.isfinite(number):
                     values[key] = number
